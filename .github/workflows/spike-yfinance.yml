@@ -1,0 +1,18 @@
+name: spike-yfinance
+on:
+  push:
+    branches: [fase-0]
+    paths:
+      - spikes/probe_yfinance.py
+      - .github/workflows/spike-yfinance.yml
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install yfinance
+      - run: python spikes/probe_yfinance.py
