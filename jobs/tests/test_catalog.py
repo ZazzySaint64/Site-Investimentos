@@ -1,6 +1,8 @@
+from datetime import date
+
 import pytest
 
-from pipeline.catalog import Asset, asset_row, load_catalog, yahoo_symbol
+from pipeline.catalog import Asset, asset_row, load_catalog, load_released, yahoo_symbol
 
 
 def test_catalog_counts():
@@ -66,3 +68,19 @@ def test_asset_row_uses_database_column_names():
         "ml_enabled": True,
         "active": True,
     }
+
+
+def test_natu3_is_out_because_its_history_is_stale():
+    tickers = {a.ticker for a in load_catalog()}
+    assert "NATU3" not in tickers and "AZZA3" in tickers
+
+
+def test_load_released_reads_ticker_and_date(tmp_path):
+    p = tmp_path / "r.csv"
+    p.write_text("ticker,date,reason\n^BVSP,2026-10-30,teste\n", encoding="utf-8")
+    assert load_released(p) == {("^BVSP", date(2026, 10, 30))}
+
+
+def test_released_file_has_only_catalog_tickers():
+    tickers = {a.ticker for a in load_catalog()}
+    assert {ticker for ticker, _ in load_released()} <= tickers

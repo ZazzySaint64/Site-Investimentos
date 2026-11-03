@@ -46,7 +46,7 @@ Job, em poucos ativos ou com o histórico completo:
 .venv/Scripts/python -m pipeline.nightly --full
 ```
 
-Um preço com variação acima de 50% sem desdobramento é rejeitado e registrado em `job_runs`. Se a variação for real, libere a data com `--release TICKER:AAAA-MM-DD`.
+Um preço com variação acima de 50% sem desdobramento é rejeitado e registrado em `job_runs`. Se a variação for real, registre a data em `jobs/catalog/released_prices.csv`. Para uma única execução, use `--release TICKER:AAAA-MM-DD`.
 
 ## Documentação
 

@@ -58,7 +58,6 @@ IGTI11,Iguatemi,acao_br,BRL,Varejo,false
 BRAP4,Bradespar,acao_br,BRL,Mineração,false
 CYRE3,Cyrela,acao_br,BRL,Construção,false
 CURY3,Cury,acao_br,BRL,Construção,false
-NATU3,Natura,acao_br,BRL,Consumo,false
 AURE3,Auren,acao_br,BRL,Energia,false
 COGN3,Cogna,acao_br,BRL,Educação,false
 CSNA3,CSN,acao_br,BRL,Siderurgia,false
@@ -69,6 +68,7 @@ TEND3,Tenda,acao_br,BRL,Construção,false
 YDUQ3,Yduqs,acao_br,BRL,Educação,false
 VIVA3,Vivara,acao_br,BRL,Varejo,false
 MGLU3,Magazine Luiza,acao_br,BRL,Varejo,false
+AZZA3,Azzas 2154,acao_br,BRL,Varejo,false
 KNCR11,Kinea Rendimentos,fii,BRL,FII Papel,true
 BTLG11,BTG Logística,fii,BRL,FII Logística,true
 KNIP11,Kinea Índices de Preços,fii,BRL,FII Papel,true

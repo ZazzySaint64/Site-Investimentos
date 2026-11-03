@@ -6,6 +6,7 @@ from datetime import date
 from pathlib import Path
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "catalog" / "assets.csv"
+RELEASED_PATH = Path(__file__).resolve().parents[1] / "catalog" / "released_prices.csv"
 CLASSES = {"acao_br", "fii", "acao_eua", "cripto", "tesouro", "indice"}
 
 
@@ -39,6 +40,11 @@ def load_catalog(path: Path = CATALOG_PATH) -> list[Asset]:
                 )
             )
     return assets
+
+
+def load_released(path: Path = RELEASED_PATH) -> set[tuple[str, date]]:
+    with path.open(encoding="utf-8", newline="") as file:
+        return {(row["ticker"], date.fromisoformat(row["date"])) for row in csv.DictReader(file)}
 
 
 def yahoo_symbol(asset: Asset) -> str:

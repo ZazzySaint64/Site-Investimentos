@@ -2,7 +2,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from pipeline.validate import validate_prices
+from pipeline.validate import repair_adjusted_close, validate_prices
 
 
 def d(n):
@@ -63,3 +63,34 @@ def test_compares_with_last_accepted_not_with_rejected():
 def test_released_date_still_rejects_non_positive():
     ok, _ = validate_prices([row(d(1), 0)], 10.0, set(), {d(1)})
     assert ok == []
+
+
+def priced(day, close, adj_close):
+    return {"date": day, "close": close, "adj_close": adj_close}
+
+
+def test_repair_removes_false_step_in_adjustment():
+    rows = [priced(d(1), 110.0, 13.75), priced(d(2), 110.0, 13.75), priced(d(3), 110.0, 110.0)]
+    repaired = repair_adjusted_close(rows)
+    assert [r["adj_close"] for r in repaired] == pytest.approx([110.0, 110.0, 110.0])
+    assert rows[0]["adj_close"] == 13.75
+
+
+def test_repair_keeps_normal_dividend_steps():
+    rows = [priced(d(1), 100.0, 90.0), priced(d(2), 100.0, 99.0), priced(d(3), 100.0, 100.0)]
+    assert repair_adjusted_close(rows) == rows
+
+
+def test_repair_keeps_earlier_dividends_when_removing_a_step():
+    rows = [priced(d(1), 100.0, 9.0), priced(d(2), 100.0, 10.0), priced(d(3), 100.0, 100.0)]
+    repaired = repair_adjusted_close(rows)
+    assert [r["adj_close"] for r in repaired] == pytest.approx([90.0, 100.0, 100.0])
+
+
+def test_repair_handles_false_step_downwards():
+    rows = [priced(d(1), 100.0, 100.0), priced(d(2), 100.0, 25.0)]
+    assert repair_adjusted_close(rows)[0]["adj_close"] == pytest.approx(25.0)
+
+
+def test_repair_of_empty_list():
+    assert repair_adjusted_close([]) == []

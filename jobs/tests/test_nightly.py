@@ -433,3 +433,25 @@ def test_sector_stats_keep_assets_outside_the_tickers_option(fake):
 
 def test_parse_release_handles_caret_tickers():
     assert nightly.parse_release("^BVSP:2026-10-30") == ("^BVSP", date(2026, 10, 30))
+
+
+def test_false_adjustment_step_is_repaired_before_saving(fake):
+    fake.histories["A.SA"] = History(
+        [row(TODAY - timedelta(days=2), 100.0, 10.0), row(TODAY - timedelta(days=1), 100.0, 100.0)], []
+    )
+    fake.run()
+    assert [r["adj_close"] for r in fake.prices("A")] == pytest.approx([100.0, 100.0])
+
+
+def test_main_merges_released_file_with_release_option(fake, monkeypatch):
+    seen = {}
+
+    def fake_run(deps, today, tickers=None, full=False, released=frozenset()):
+        seen["released"] = released
+        return nightly.RunResult("success")
+
+    monkeypatch.setattr(nightly, "run", fake_run)
+    monkeypatch.setattr(nightly, "default_deps", lambda: None)
+    monkeypatch.setattr(nightly, "load_released", lambda: {("A", date(2026, 1, 2))})
+    assert nightly.main(["--release", "B:2026-01-03"]) == 0
+    assert seen["released"] == {("A", date(2026, 1, 2)), ("B", date(2026, 1, 3))}

@@ -14,11 +14,11 @@ from dotenv import load_dotenv
 
 from pipeline import db as default_db
 from pipeline import stats
-from pipeline.catalog import Asset, asset_row, load_catalog, yahoo_symbol
+from pipeline.catalog import Asset, asset_row, load_catalog, load_released, yahoo_symbol
 from pipeline.sources.bcb import SERIES, fetch_series, year_windows
 from pipeline.sources.tesouro import TesouroData, fetch_tesouro
 from pipeline.sources.yahoo import History, fetch_history, ten_years_before
-from pipeline.validate import validate_prices
+from pipeline.validate import repair_adjusted_close, validate_prices
 
 OVERLAP_DAYS = 5
 SECONDS_BETWEEN_ASSETS = 0.2
@@ -138,6 +138,7 @@ def _process_asset(deps, asset, asset_id, tesouro, today, full, released, result
             {day for day, _ in history.splits},
             {day for ticker, day in released if ticker == asset.ticker},
         )
+        accepted = repair_adjusted_close(accepted)
         result.rejected += [
             {"ticker": asset.ticker, "date": item.date.isoformat(), "reason": item.reason}
             for item in rejected
@@ -318,7 +319,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     tickers = [t.strip() for t in args.tickers.split(",") if t.strip()] if args.tickers else None
-    released = {parse_release(item) for item in args.release.split(",")} if args.release else set()
+    released = load_released()
+    if args.release:
+        released |= {parse_release(item) for item in args.release.split(",")}
     today = datetime.now(UTC).date()
     result = run(default_deps(), today, tickers=tickers, full=args.full, released=released)
     print(
