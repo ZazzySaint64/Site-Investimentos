@@ -116,3 +116,15 @@ def test_fetch_decodes_and_retries(monkeypatch):
     monkeypatch.setattr("time.sleep", lambda seconds: None)
     assert fetch_tesouro(TODAY).assets[0].ticker == "TD-SELIC-20290301"
     assert timeouts == [120, 120]
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "Tesouro Selic;01/03/2029;29/10/2026;0,06;0,07;;\n",
+        "Tesouro Selic;01/03/2029\n",
+    ],
+)
+def test_short_line_is_skipped_and_reported(line):
+    data = parse_csv(HEADER + LINE + line, TODAY)
+    assert len(data.prices["TD-SELIC-20290301"]) == 1 and data.skipped

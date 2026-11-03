@@ -58,7 +58,7 @@ def parse_csv(text: str, today: date) -> TesouroData:
         try:
             rows.append((kind, _parse_date(line["Data Vencimento"]), _parse_date(line["Data Base"]),
                          line["PU Base Manha"]))
-        except ValueError:
+        except (ValueError, TypeError):
             skipped.append(f"data inválida: {kind} {line['Data Vencimento']} {line['Data Base']}")
 
     latest = max((base for _, _, base, _ in rows), default=None)
@@ -72,7 +72,7 @@ def parse_csv(text: str, today: date) -> TesouroData:
             continue
         try:
             price = float(raw_price.replace(",", "."))
-        except ValueError:
+        except (ValueError, AttributeError):
             skipped.append(f"preço inválido: {kind} {maturity} {base}")
             continue
         by_date.setdefault((kind, maturity), {})[base] = {

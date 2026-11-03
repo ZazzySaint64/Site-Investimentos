@@ -2,7 +2,14 @@ from datetime import date
 
 import pytest
 
-from pipeline.catalog import Asset, asset_row, load_catalog, load_released, yahoo_symbol
+from pipeline.catalog import (
+    Asset,
+    asset_row,
+    load_catalog,
+    load_history_starts,
+    load_released,
+    yahoo_symbol,
+)
 
 
 def test_catalog_counts():
@@ -84,3 +91,18 @@ def test_load_released_reads_ticker_and_date(tmp_path):
 def test_released_file_has_only_catalog_tickers():
     tickers = {a.ticker for a in load_catalog()}
     assert {ticker for ticker, _ in load_released()} <= tickers
+
+
+def test_load_history_starts_reads_ticker_and_date(tmp_path):
+    p = tmp_path / "s.csv"
+    p.write_text("ticker,start,reason\nAAA,2021-06-28,teste\n", encoding="utf-8")
+    assert load_history_starts(p) == {"AAA": date(2021, 6, 28)}
+
+
+def test_ugpa3_history_starts_after_the_scale_change_and_is_not_released():
+    assert load_history_starts()["UGPA3"] == date(2021, 6, 28)
+    assert "UGPA3" not in {ticker for ticker, _ in load_released()}
+
+
+def test_history_starts_file_has_only_catalog_tickers():
+    assert set(load_history_starts()) <= {a.ticker for a in load_catalog()}

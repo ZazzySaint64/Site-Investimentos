@@ -1,5 +1,6 @@
 """Price checks. Pure functions: nothing here touches the network or the database."""
 
+import math
 from dataclasses import dataclass
 from datetime import date
 from typing import TypedDict
@@ -29,9 +30,9 @@ def validate_prices(
     accepted, rejected = [], []
     previous = previous_close
     for row in rows:
-        day, close = row["date"], row["close"]
-        if close <= 0 or row["adj_close"] <= 0:
-            rejected.append(Rejection(day, "preço zero ou negativo"))
+        day, close, adj_close = row["date"], row["close"], row["adj_close"]
+        if not (math.isfinite(close) and math.isfinite(adj_close) and close > 0 and adj_close > 0):
+            rejected.append(Rejection(day, "preço zero, negativo ou inválido"))
             continue
         exempt = day in split_dates or day in released
         if (

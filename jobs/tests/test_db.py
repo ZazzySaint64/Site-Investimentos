@@ -132,3 +132,11 @@ def test_does_not_retry_on_4xx(session):
     with pytest.raises(requests.HTTPError):
         db.upsert("prices", [{"x": 1}], "x")
     assert len(session.calls) == 1
+
+
+def test_delete_sends_filters(session):
+    db.delete("prices", {"asset_id": "eq.5", "date": "in.(2026-01-01,2026-01-02)"})
+    call = session.calls[0]
+    assert call["method"] == "DELETE"
+    assert call["params"] == {"asset_id": "eq.5", "date": "in.(2026-01-01,2026-01-02)"}
+    assert call["headers"]["apikey"] == "sb_secret_test"

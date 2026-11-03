@@ -94,3 +94,20 @@ def test_repair_handles_false_step_downwards():
 
 def test_repair_of_empty_list():
     assert repair_adjusted_close([]) == []
+
+
+@pytest.mark.parametrize("price", [float("nan"), float("inf")])
+def test_rejects_non_finite_close(price):
+    ok, bad = validate_prices([row(d(1), price)], None, set(), set())
+    assert ok == [] and bad[0].date == d(1)
+
+
+def test_non_finite_adjusted_close_does_not_become_the_previous_close():
+    rows = [{"date": d(1), "close": 10.0, "adj_close": float("nan")}, row(d(2), 11.0)]
+    ok, bad = validate_prices(rows, 10.0, set(), set())
+    assert [r["date"] for r in ok] == [d(2)] and [b.date for b in bad] == [d(1)]
+
+
+def test_nan_close_does_not_disable_the_next_comparison():
+    ok, _ = validate_prices([row(d(1), float("nan")), row(d(2), 500.0)], 10.0, set(), set())
+    assert ok == []

@@ -78,6 +78,10 @@ def insert_returning(table: str, row: dict) -> dict:
     return _request("POST", table, body=row, prefer="return=representation").json()[0]
 
 
+def delete(table: str, filters: dict[str, str]) -> None:
+    _request("DELETE", table, params=filters)
+
+
 def update(table: str, match: dict[str, str], values: dict) -> None:
     params = {column: f"eq.{value}" for column, value in match.items()}
     _request("PATCH", table, params=params, body=values)

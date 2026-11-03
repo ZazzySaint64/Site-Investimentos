@@ -7,6 +7,7 @@ from pathlib import Path
 
 CATALOG_PATH = Path(__file__).resolve().parents[1] / "catalog" / "assets.csv"
 RELEASED_PATH = Path(__file__).resolve().parents[1] / "catalog" / "released_prices.csv"
+HISTORY_STARTS_PATH = Path(__file__).resolve().parents[1] / "catalog" / "history_starts.csv"
 CLASSES = {"acao_br", "fii", "acao_eua", "cripto", "tesouro", "indice"}
 
 
@@ -45,6 +46,11 @@ def load_catalog(path: Path = CATALOG_PATH) -> list[Asset]:
 def load_released(path: Path = RELEASED_PATH) -> set[tuple[str, date]]:
     with path.open(encoding="utf-8", newline="") as file:
         return {(row["ticker"], date.fromisoformat(row["date"])) for row in csv.DictReader(file)}
+
+
+def load_history_starts(path: Path = HISTORY_STARTS_PATH) -> dict[str, date]:
+    with path.open(encoding="utf-8", newline="") as file:
+        return {row["ticker"]: date.fromisoformat(row["start"]) for row in csv.DictReader(file)}
 
 
 def yahoo_symbol(asset: Asset) -> str:

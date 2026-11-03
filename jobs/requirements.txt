@@ -1,5 +1,5 @@
-yfinance
-pandas
-numpy
-requests
-python-dotenv
+yfinance==1.7.0
+pandas==3.1.0
+numpy==2.5.4
+requests==2.34.2
+python-dotenv==1.2.4

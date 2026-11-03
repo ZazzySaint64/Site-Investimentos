@@ -14,7 +14,14 @@ from dotenv import load_dotenv
 
 from pipeline import db as default_db
 from pipeline import stats
-from pipeline.catalog import Asset, asset_row, load_catalog, load_released, yahoo_symbol
+from pipeline.catalog import (
+    Asset,
+    asset_row,
+    load_catalog,
+    load_history_starts,
+    load_released,
+    yahoo_symbol,
+)
 from pipeline.sources.bcb import SERIES, fetch_series, year_windows
 from pipeline.sources.tesouro import TesouroData, fetch_tesouro
 from pipeline.sources.yahoo import History, fetch_history, ten_years_before
@@ -27,6 +34,7 @@ FAILED_SHARE = 0.10
 # the saved adjusted history is stale. The tolerance absorbs rounding of the numeric(18,6) column.
 ADJUSTMENT_TOLERANCE = 0.0005
 STATS_EXCLUDED_CLASSES = ("tesouro", "indice")
+DELETE_BATCH_SIZE = 200
 
 
 @dataclass
@@ -102,16 +110,24 @@ def _adjustment_changed(history: History, saved: dict[date, dict]) -> bool:
     return False
 
 
-def _market_history(deps, asset, asset_id, saved, today, full) -> tuple[History, date | None]:
+def _market_history(deps, asset, asset_id, saved, today, full, cut) -> tuple[History, date | None]:
+    def fetch(start):
+        history = deps.fetch_history(yahoo_symbol(asset), start, today)
+        if cut is None:
+            return history
+        return History(
+            [row for row in history.prices if row["date"] >= cut],
+            [split for split in history.splits if split[0] >= cut],
+        )
+
     start = None if full or not saved else max(saved) - timedelta(days=OVERLAP_DAYS)
-    symbol = yahoo_symbol(asset)
-    history = deps.fetch_history(symbol, start, today)
+    history = fetch(start)
     if start is not None:
         params = {"select": "date", "asset_id": f"eq.{asset_id}", "order": "date"}
         known_splits = {row["date"] for row in deps.db.select_all("splits", params)}
         new_split = any(day.isoformat() not in known_splits for day, _ in history.splits)
         if new_split or _adjustment_changed(history, saved):
-            return deps.fetch_history(symbol, None, today), None
+            return fetch(None), None
     return history, start
 
 
@@ -122,14 +138,26 @@ def _tesouro_history(rows, saved, full) -> tuple[History, date | None]:
     return History([row for row in rows if row["date"] >= start], []), start
 
 
-def _process_asset(deps, asset, asset_id, tesouro, today, full, released, result) -> pd.Series | None:
+def _delete_rows(deps, table, column, asset_id, values) -> None:
+    ordered = sorted(values)
+    for start in range(0, len(ordered), DELETE_BATCH_SIZE):
+        batch = ",".join(ordered[start : start + DELETE_BATCH_SIZE])
+        deps.db.delete(table, {"asset_id": f"eq.{asset_id}", column: f"in.({batch})"})
+
+
+def _process_asset(
+    deps, asset, asset_id, tesouro, today, full, released, cut, result
+) -> tuple[pd.Series | None, bool]:
+    """Returns the adjusted closes, and whether the source had nothing for this asset."""
     saved = _load_saved_prices(deps, asset_id)
+    removed_rows = False
     if asset.asset_class == "tesouro":
         history, start = _tesouro_history(tesouro.prices[asset.ticker], saved, full)
     else:
-        history, start = _market_history(deps, asset, asset_id, saved, today, full)
+        history, start = _market_history(deps, asset, asset_id, saved, today, full, cut)
 
-    if history.prices:
+    has_data = bool(history.prices)
+    if has_data:
         before_start = [day for day in saved if start is not None and day < start]
         previous_close = float(saved[max(before_start)]["close"]) if before_start else None
         accepted, rejected = validate_prices(
@@ -151,13 +179,22 @@ def _process_asset(deps, asset, asset_id, tesouro, today, full, released, result
         deps.db.upsert(
             "prices", [{"asset_id": asset_id, **row} for row in accepted], "asset_id,date"
         )
+        # A refetch replaces the history: rows it left out are on the old scale, or were rejected
+        # now, or fell out of the 10-year window. A truncated response keeps them.
+        accepted_days = {row["date"] for row in accepted}
+        if start is None and saved and accepted_days and max(accepted_days) >= max(saved):
+            stale = set(saved) - accepted_days
+            _delete_rows(deps, "prices", "date", asset_id, [day.isoformat() for day in stale])
+            for day in stale:
+                del saved[day]
+            removed_rows = bool(stale)
         for row in accepted:
             saved[row["date"]] = row
     else:
         result.skipped.append(f"sem dados novos: {asset.ticker}")
 
     if not saved:
-        return None
+        return None, not has_data
     adj_close = _series([{"date": day, **saved[day]} for day in sorted(saved)], "adj_close")
     monthly = stats.monthly_returns(adj_close, today)
     deps.db.upsert(
@@ -168,7 +205,12 @@ def _process_asset(deps, asset, asset_id, tesouro, today, full, released, result
         ],
         "asset_id,month",
     )
-    return adj_close
+    if removed_rows:
+        params = {"select": "month", "asset_id": f"eq.{asset_id}", "order": "month"}
+        known = {row["month"] for row in deps.db.select_all("monthly_returns", params)}
+        current = {month.date().isoformat() for month in monthly.index}
+        _delete_rows(deps, "monthly_returns", "month", asset_id, known - current)
+    return adj_close, not has_data
 
 
 def _write_stats(deps, assets_by_ticker, adj_close_by_ticker, today) -> None:
@@ -224,7 +266,7 @@ def _write_stats(deps, assets_by_ticker, adj_close_by_ticker, today) -> None:
     )
 
 
-def _execute(deps, today, tickers, full, released) -> RunResult:
+def _execute(deps, today, tickers, full, released, history_starts) -> RunResult:
     result = RunResult("success")
     tesouro: TesouroData | None = None
     tesouro_failed = False
@@ -248,12 +290,22 @@ def _execute(deps, today, tickers, full, released) -> RunResult:
         candidates = [asset for asset in candidates if asset.ticker in tickers]
 
     failed_assets = []
+    without_data = 0
     adj_close_by_ticker = {}
     for asset in candidates:
         try:
-            adj_close = _process_asset(
-                deps, asset, assets_by_ticker[asset.ticker]["id"], tesouro, today, full, released, result
+            adj_close, empty = _process_asset(
+                deps,
+                asset,
+                assets_by_ticker[asset.ticker]["id"],
+                tesouro,
+                today,
+                full,
+                released,
+                history_starts.get(asset.ticker),
+                result,
             )
+            without_data += empty
             if adj_close is not None:
                 adj_close_by_ticker[asset.ticker] = adj_close
         except Exception as exc:
@@ -265,7 +317,9 @@ def _execute(deps, today, tickers, full, released) -> RunResult:
 
     _write_stats(deps, assets_by_ticker, adj_close_by_ticker, today)
 
-    too_many = candidates and len(failed_assets) >= FAILED_SHARE * len(candidates)
+    # yfinance reports most outages as an empty response, so those count like failures here.
+    unavailable = len(failed_assets) + without_data
+    too_many = candidates and unavailable >= FAILED_SHARE * len(candidates)
     if tesouro_failed or macro_failed or too_many:
         result.status = "failed"
     elif failed_assets or result.rejected:
@@ -279,6 +333,7 @@ def run(
     tickers: list[str] | None = None,
     full: bool = False,
     released: set[tuple[str, date]] = frozenset(),
+    history_starts: dict[str, date] | None = None,
 ) -> RunResult:
     job = deps.db.insert_returning("job_runs", {"job": "nightly", "status": "running", "details": {}})
 
@@ -287,7 +342,7 @@ def run(
         deps.db.update("job_runs", {"id": str(job["id"])}, values)
 
     try:
-        result = _execute(deps, today, tickers, full, released)
+        result = _execute(deps, today, tickers, full, released, history_starts or {})
     except Exception as exc:
         print(f"nightly failed: {exc}", file=sys.stderr)
         close("failed", {"error": f"{type(exc).__name__}: {exc}"[:500]})
@@ -323,7 +378,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.release:
         released |= {parse_release(item) for item in args.release.split(",")}
     today = datetime.now(UTC).date()
-    result = run(default_deps(), today, tickers=tickers, full=args.full, released=released)
+    result = run(
+        default_deps(),
+        today,
+        tickers=tickers,
+        full=args.full,
+        released=released,
+        history_starts=load_history_starts(),
+    )
     print(
         f"status={result.status} failed={len(result.failed)} "
         f"rejected={len(result.rejected)} skipped={len(result.skipped)}"

@@ -61,6 +61,18 @@ class FakeDb:
             rows.sort(key=lambda r: [r[column] for column in columns])
         return [dict(r) for r in rows]
 
+    def delete(self, table, filters):
+        def matches(stored):
+            for column, value in filters.items():
+                if value.startswith("in."):
+                    if str(stored[column]) not in value[4:-1].split(","):
+                        return False
+                elif str(stored[column]) != value.removeprefix("eq."):
+                    return False
+            return True
+
+        self.tables[table] = [r for r in self.tables.get(table, []) if not matches(r)]
+
     def insert_returning(self, table, row):
         stored = self.tables.setdefault(table, [])
         created = {"id": len(stored) + 1, **real_db._clean(row)}
@@ -446,7 +458,7 @@ def test_false_adjustment_step_is_repaired_before_saving(fake):
 def test_main_merges_released_file_with_release_option(fake, monkeypatch):
     seen = {}
 
-    def fake_run(deps, today, tickers=None, full=False, released=frozenset()):
+    def fake_run(deps, today, tickers=None, full=False, released=frozenset(), history_starts=None):
         seen["released"] = released
         return nightly.RunResult("success")
 
@@ -455,3 +467,94 @@ def test_main_merges_released_file_with_release_option(fake, monkeypatch):
     monkeypatch.setattr(nightly, "load_released", lambda: {("A", date(2026, 1, 2))})
     assert nightly.main(["--release", "B:2026-01-03"]) == 0
     assert seen["released"] == {("A", date(2026, 1, 2)), ("B", date(2026, 1, 3))}
+
+
+def test_refetch_with_moved_window_removes_rows_it_did_not_rewrite(fake):
+    fake.histories["A.SA"] = History(days_back(10, close=100.0), [])
+    fake.run()
+    split_day = TODAY - timedelta(days=1)
+
+    def after_split(start):
+        return History(days_back(7, close=50.0), [(split_day, 2.0)])
+
+    fake.histories["A.SA"] = after_split
+    result = fake.run()
+    assert result.rejected == []
+    assert len(fake.prices("A")) == 7
+    assert {r["close"] for r in fake.prices("A")} == {50.0}
+
+
+def test_refetch_removes_saved_row_on_a_rejected_date(fake):
+    days = days_back(6, close=100.0)
+    fake.histories["A.SA"] = History(days, [])
+    fake.run()
+    bad_day = days[3]["date"]
+    new_rows = [row(r["date"], 500.0 if r["date"] == bad_day else 50.0) for r in days]
+    fake.histories["A.SA"] = History(new_rows, [(days[-1]["date"], 2.0)])
+    result = fake.run()
+    assert [item["date"] for item in result.rejected] == [bad_day.isoformat()]
+    assert bad_day.isoformat() not in [r["date"] for r in fake.prices("A")]
+    assert {r["close"] for r in fake.prices("A")} == {50.0}
+
+
+def test_truncated_refetch_keeps_saved_rows(fake):
+    days = days_back(10, close=100.0)
+    fake.histories["A.SA"] = History(days, [])
+    fake.run()
+    fake.histories["A.SA"] = lambda start: History(days[:4], [(days[0]["date"], 2.0)])
+    fake.run()
+    assert len(fake.prices("A")) == 10
+
+
+def test_refetch_removes_monthly_returns_of_removed_months(fake):
+    history = monthly_history(14)
+    fake.histories["A.SA"] = History(history, [])
+    fake.run()
+    asset_id = fake.asset("A")["id"]
+    months = lambda: sorted(r["month"] for r in fake.rows("monthly_returns") if r["asset_id"] == asset_id)
+    first_month = months()[0]
+    scaled = [row(r["date"], r["close"] / 2) for r in history[2:]]
+    fake.histories["A.SA"] = History(scaled, [(history[-1]["date"], 2.0)])
+    fake.run()
+    assert first_month not in months()
+    assert len(months()) == 11
+    values = [r["ret_local"] for r in fake.rows("monthly_returns") if r["asset_id"] == asset_id]
+    assert all(abs(value) < 0.1 for value in values)
+
+
+def test_all_assets_without_data_marks_failed(fake):
+    fake.catalog = [stock(f"S{i}") for i in range(20)]
+    for i in range(20):
+        fake.histories[f"S{i}.SA"] = History([], [])
+    assert fake.run().status == "failed"
+
+
+def test_one_asset_without_data_among_many_is_success(fake):
+    fake.catalog = [stock(f"S{i}") for i in range(20)]
+    fake.histories["S0.SA"] = History([], [])
+    assert fake.run().status == "success"
+
+
+def test_history_start_drops_earlier_prices_and_splits(fake):
+    cut = TODAY - timedelta(days=3)
+    fake.histories["A.SA"] = History(days_back(10), [(TODAY - timedelta(days=8), 2.0)])
+    fake.run(history_starts={"A": cut})
+    assert fake.prices("A")[0]["date"] == cut.isoformat()
+    assert fake.rows("splits") == []
+
+
+def test_history_start_removes_saved_rows_on_full_run(fake):
+    fake.histories["A.SA"] = History(days_back(10), [])
+    fake.run()
+    cut = TODAY - timedelta(days=3)
+    fake.run(full=True, history_starts={"A": cut})
+    assert fake.prices("A")[0]["date"] == cut.isoformat()
+
+
+def test_split_before_history_start_does_not_trigger_refetch(fake):
+    cut = TODAY - timedelta(days=3)
+    fake.histories["A.SA"] = History(days_back(10), [(TODAY - timedelta(days=8), 2.0)])
+    fake.run(history_starts={"A": cut})
+    fake.history_calls.clear()
+    fake.run(history_starts={"A": cut})
+    assert len([call for call in fake.history_calls if call[0] == "A.SA"]) == 1
