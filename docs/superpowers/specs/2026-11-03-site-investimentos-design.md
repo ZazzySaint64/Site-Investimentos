@@ -112,7 +112,7 @@ O ML cobre 50 deles: 20 ações B3, 5 FIIs, 15 ações EUA e 10 cripto.
 
 ### Dados públicos
 
-Qualquer um lê. Só os jobs escrevem, com chave `service_role` guardada nos secrets do GitHub.
+Qualquer um lê. Só os jobs escrevem, com a chave secreta do Supabase (`sb_secret_...`, papel `service_role`) guardada nos secrets do GitHub.
 
 | Tabela | Colunas principais |
 |---|---|
@@ -349,7 +349,7 @@ Números em fonte monoespaçada; texto em fonte do sistema. As faixas de previs�
 
 ## 11. Segurança
 
-- `service_role` só existe nos secrets do GitHub e na rota de apagar conta. A chave da Groq só existe no servidor.
+- A chave secreta do Supabase só existe nos secrets do GitHub e na rota de apagar conta. A chave da Groq só existe no servidor.
 - Tabelas públicas são somente leitura para `anon` e `authenticated`.
 - Dados do usuário: RLS em todas as tabelas.
 - A rota do chat valida entrada por esquema e limita o tamanho das mensagens.
