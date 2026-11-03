@@ -11,7 +11,7 @@ for line in Path(".env").read_text(encoding="utf-8").splitlines():
 
 URL = "https://api.groq.com/openai/v1/chat/completions"
 HEADERS = {"Authorization": f"Bearer {os.environ['GROQ_API_KEY']}"}
-MODELS = ["llama-3.3-70b-versatile", "openai/gpt-oss-120b"]
+MODELS = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
 QUESTIONS = [
     "Como está a volatilidade de PETR4?",
     "PETR4 é arriscada?",

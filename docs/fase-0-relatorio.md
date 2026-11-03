@@ -9,7 +9,7 @@ Validações feitas em 2026-11-03.
 | API SGS do Banco Central | Aprovado |
 | Supabase | Aprovado nos limites oficiais; projeto ainda não criado |
 | Vercel | Aprovado |
-| Groq | Pendente: depende da chave do autor |
+| Groq | Aprovado com `openai/gpt-oss-120b`; `llama-3.3-70b-versatile` não existe mais para esta conta |
 
 ## yfinance
 
@@ -74,4 +74,37 @@ Plano Hobby, segundo a [documentação](https://vercel.com/docs/plans/hobby):
 
 ## Groq
 
-Pendente.
+**Modelo escolhido: `openai/gpt-oss-120b`.**
+
+`llama-3.3-70b-versatile`, o modelo inicial da spec, respondeu HTTP 404 (`model_not_found`) e não aparece em `GET /models`. Testei as alternativas de chat listadas para esta conta:
+
+| Modelo | Resultado | Tokens nas 5 perguntas | Média |
+|---|---|---:|---:|
+| `openai/gpt-oss-120b` | HTTP 200 em tudo; ferramenta chamada na 1ª pergunta | 622, 869, 675, 337, 844 | 669 |
+| `openai/gpt-oss-20b` | HTTP 200 em tudo; ferramenta chamada na 1ª pergunta | 604, 1.121, 607, 231, 828 | 678 |
+| `qwen/qwen3.8-27b` | Reprovado: HTTP 400 `tool_use_failed` na 1ª pergunta e HTTP 429 em seguida | Incompleto | n/a |
+
+**Por que o 120b:** o português ficou melhor e os números da ferramenta vieram corretos. Recusou o pedido de compra e disse que não dá para prever a alta de PETR4. O 20b explicou volatilidade de forma errada ("variação diária média... ao ano") e, na pergunta sobre a alta, não disse que não dá para prever.
+
+**Problemas a tratar na fase 6:**
+
+- A resposta sobre Sharpe foi cortada pelo limite de 500 tokens. O prompt precisa pedir respostas curtas.
+- O modelo citou faixas de Sharpe que não vieram da ferramenta. Isso confirma a necessidade do validador de números.
+
+**Cota:**
+
+| Limite | Valor | Origem |
+|---|---:|---|
+| Requisições por dia | 1.000 | Header da resposta e documentação |
+| Tokens por minuto | 8.000 | Header da resposta e documentação |
+| Requisições por minuto | 30 | [Documentação](https://console.groq.com/docs/rate-limits) |
+| Tokens por dia | 200.000 | Documentação; não vem nos headers |
+
+`CHAT_GLOBAL_DAILY_LIMIT` = 70% de (200.000 / 669) = **209 perguntas por dia**. Acima do mínimo de 20.
+
+- A pergunta com ferramenta usa 2 requisições: 209 perguntas usam no máximo 418 das 1.000.
+- Os 8.000 tokens por minuto permitem cerca de 11 perguntas por minuto no site inteiro.
+- O teste enviou uma pergunta por vez. As últimas 6 mensagens do chat aumentam o custo, então o valor precisa de nova medição na fase 6.
+- A documentação não deixa claro se a tabela vale para o plano gratuito. Os headers desta conta coincidem com ela, mas os 200.000 tokens por dia dependem de confirmação no painel.
+
+**Retenção zero:** a [documentação](https://console.groq.com/docs/your-data) diz que todos os clientes podem ativá-la em Data Controls. Sem ela, entradas e saídas podem ficar até 30 dias em registros de diagnóstico. A página não diz se os dados são usados para treinamento. Confirmação da ativação nesta conta: pendente do autor.
