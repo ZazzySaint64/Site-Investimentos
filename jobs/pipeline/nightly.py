@@ -103,9 +103,10 @@ def _load_saved_prices(deps, asset_id) -> dict[date, dict]:
 
 
 def _adjustment_changed(history: History, saved: dict[date, dict]) -> bool:
+    latest = max(saved)  # may have been saved as a partial bar during trading hours
     for row in history.prices:
         stored = saved.get(row["date"])
-        if stored and abs(row["adj_close"] / float(stored["adj_close"]) - 1) > ADJUSTMENT_TOLERANCE:
+        if stored and row["date"] != latest and abs(row["adj_close"] / float(stored["adj_close"]) - 1) > ADJUSTMENT_TOLERANCE:
             return True
     return False
 

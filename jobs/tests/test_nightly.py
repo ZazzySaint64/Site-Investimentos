@@ -558,3 +558,15 @@ def test_split_before_history_start_does_not_trigger_refetch(fake):
     fake.history_calls.clear()
     fake.run(history_starts={"A": cut})
     assert len([call for call in fake.history_calls if call[0] == "A.SA"]) == 1
+
+
+def test_change_only_on_the_latest_saved_day_does_not_refetch(fake):
+    days = days_back(10, close=100.0)
+    fake.histories["A.SA"] = History(days, [])
+    fake.run()
+    moved = days[:-1] + [row(days[-1]["date"], 101.0)]
+    fake.histories["A.SA"] = History(moved, [])
+    fake.history_calls.clear()
+    fake.run()
+    assert len([call for call in fake.history_calls if call[0] == "A.SA"]) == 1
+    assert fake.prices("A")[-1]["close"] == 101.0
