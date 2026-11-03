@@ -6,7 +6,7 @@ Um site que trabalha com dados de investimentos, focado em pessoas leigas: carte
 
 ## Estado atual
 
-O job de dados está pronto. O site já tem tela inicial, lista de ativos com busca, página de cada ativo com explicações e glossário. Carteira, simulador e assistente vêm nas próximas fases.
+O job de dados está pronto. O site já tem tela inicial, carteira de exemplo sem login, lista de ativos com busca, página de cada ativo com explicações e glossário. Carteira própria, simulador e assistente vêm nas próximas fases.
 
 Todas as noites, às 02:30 UTC, o job no GitHub Actions atualiza preços, séries macro, Tesouro Direto e estatísticas no Supabase. O site só vai ler do banco, nunca das fontes externas.
 
@@ -30,7 +30,7 @@ npm install
 npm run dev
 ```
 
-Abra `http://localhost:3000`. Testes: `npm test`.
+Abra `http://localhost:3000`. Testes: `npm test`. Fluxo completo no navegador, com dados reais: `npx playwright install chromium` uma vez, depois `npm run test:e2e`.
 
 No Windows, basta dar dois cliques em `abrir-site.bat`, na raiz do repositório. Ele instala as dependências na primeira vez, inicia o site e abre o navegador.
 
