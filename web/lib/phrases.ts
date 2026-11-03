@@ -72,6 +72,18 @@ export function resultPhrase(result: number): string {
     : `A carteira ganhou ${size} até hoje, sem contar proventos.`;
 }
 
+const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function lastGoodFinish(
+  runs: { status: string; finished_at: string | null }[],
+): string | null {
+  return runs.find((run) => run.status !== "failed" && run.finished_at)?.finished_at ?? null;
+}
+
+export function isStale(finishedAt: string, nowMs: number): boolean {
+  return nowMs - Date.parse(finishedAt) > STALE_AFTER_MS;
+}
+
 export function riskLabel(volatility: number | null): string {
   if (volatility === null) return MISSING;
   if (volatility < 0.15) return "Baixa";

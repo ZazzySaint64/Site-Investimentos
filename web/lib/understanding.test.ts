@@ -8,6 +8,8 @@ import {
   formatSignedMoney,
   formatSignedPercent,
   growthOfThousand,
+  isStale,
+  lastGoodFinish,
   resultPhrase,
   riskLabel,
   runSummary,
@@ -112,4 +114,23 @@ test("quantity keeps at most two decimals", () => {
   assert.equal(formatQuantity(226.6), "226,6");
   assert.equal(formatQuantity(1.5), "1,5");
   assert.equal(formatQuantity(300), "300");
+});
+
+test("data becomes stale only after three full days", () => {
+  const finished = "2026-11-01T02:30:00Z";
+  assert.equal(isStale(finished, Date.parse("2026-11-04T02:30:00Z")), false);
+  assert.equal(isStale(finished, Date.parse("2026-11-04T02:30:01Z")), true);
+});
+
+test("failed runs do not count as an update", () => {
+  const runs = [
+    { status: "failed", finished_at: "2026-11-03T02:30:00Z" },
+    { status: "partial", finished_at: "2026-11-02T02:30:00Z" },
+  ];
+  assert.equal(lastGoodFinish(runs), "2026-11-02T02:30:00Z");
+});
+
+test("no finished run gives no date", () => {
+  assert.equal(lastGoodFinish([{ status: "running", finished_at: null }]), null);
+  assert.equal(lastGoodFinish([]), null);
 });

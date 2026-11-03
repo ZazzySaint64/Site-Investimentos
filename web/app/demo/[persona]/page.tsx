@@ -25,7 +25,7 @@ const PROFILE_LABELS: Record<string, string> = {
   moderado: "Perfil moderado",
   arrojado: "Perfil arrojado",
 };
-const HEADER_CELL = "px-4 py-3 text-right font-medium";
+const HEADER_CELL = "px-2 py-3 text-right font-medium sm:px-4";
 const WIDE_HEADER_CELL = `${HEADER_CELL} hidden lg:table-cell`;
 const WIDE_CELL = "hidden px-4 py-3 text-right font-mono lg:table-cell";
 
@@ -151,7 +151,7 @@ export default async function DemoPage({ params }: Props) {
           <table className="w-full text-sm">
             <thead className="text-xs text-muted">
               <tr className="border-b border-border">
-                <th scope="col" className="px-4 py-3 text-left font-medium">
+                <th scope="col" className="px-3 py-3 text-left font-medium sm:px-4">
                   Ativo
                 </th>
                 <th scope="col" className={WIDE_HEADER_CELL}>
@@ -177,7 +177,7 @@ export default async function DemoPage({ params }: Props) {
             <tbody className="divide-y divide-border">
               {portfolio.positions.map((position) => (
                 <tr key={position.ticker}>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3 sm:px-4">
                     <Link
                       href={`/dados/${encodeURIComponent(position.ticker)}`}
                       className="font-medium text-accent underline-offset-2 hover:underline"
@@ -204,8 +204,8 @@ export default async function DemoPage({ params }: Props) {
                   <td className={WIDE_CELL}>{formatQuantity(position.quantity)}</td>
                   <td className={WIDE_CELL}>{formatMoney(position.averageCost)}</td>
                   <td className={WIDE_CELL}>{formatMoney(position.price)}</td>
-                  <td className="px-4 py-3 text-right font-mono">{formatMoney(position.value)}</td>
-                  <td className="px-4 py-3 text-right font-mono">
+                  <td className="px-2 py-3 text-right font-mono sm:px-4">{formatMoney(position.value)}</td>
+                  <td className="px-2 py-3 text-right font-mono sm:px-4">
                     {formatSignedMoney(position.result)}
                   </td>
                   <td className={WIDE_CELL}>{formatPercent(position.share)}</td>
