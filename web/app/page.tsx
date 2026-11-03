@@ -18,6 +18,7 @@ const STEPS = [
 ];
 
 const READY = [
+  "Carteira de exemplo, sem precisar criar conta",
   "Preços, juros e inflação atualizados toda noite",
   "Estatísticas de cada ativo com explicação",
   "Comparação de cada ativo com o CDI",
@@ -25,7 +26,6 @@ const READY = [
 ];
 
 const COMING = [
-  "Carteira de exemplo, sem precisar criar conta",
   "Sua própria carteira, com login",
   "Simulações do futuro, sempre como faixa de possibilidades",
   "Assistente de IA que só afirma o que os dados mostram",
@@ -47,16 +47,16 @@ export default async function Home() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/dados"
+            href="/demo/ana"
             className="rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90"
           >
-            Explorar ativos
+            Ver carteira de exemplo
           </Link>
           <Link
-            href="/glossario"
+            href="/dados"
             className="rounded-md border border-border px-4 py-2.5 text-sm hover:text-accent"
           >
-            Ver o glossário
+            Explorar ativos
           </Link>
         </div>
         <p className="text-sm text-muted">

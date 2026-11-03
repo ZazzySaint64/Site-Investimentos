@@ -4,8 +4,11 @@ import { GLOSSARY } from "./glossary.ts";
 import {
   accumulatedFromMonthly,
   formatMonthYear,
+  formatQuantity,
+  formatSignedMoney,
   formatSignedPercent,
   growthOfThousand,
+  resultPhrase,
   riskLabel,
   runSummary,
 } from "./phrases.ts";
@@ -90,4 +93,23 @@ test("every glossary entry has a title and an explanation", () => {
 test("a value that rounds to zero has no sign", () => {
   assert.equal(formatSignedPercent(-0.0002), "0,0%");
   assert.equal(formatSignedPercent(0.0002), "0,0%");
+});
+
+test("result phrase says gain, loss or neither", () => {
+  assert.match(resultPhrase(800), /ganhou/);
+  assert.match(resultPhrase(-800), /perdeu/);
+  assert.match(resultPhrase(0), /nem ganhou nem perdeu/);
+});
+
+test("signed money shows plus, minus or nothing at zero", () => {
+  assert.match(formatSignedMoney(1234.5), /^\+R\$\s1\.234,50$/);
+  assert.match(formatSignedMoney(-1234.5), /^−R\$\s1\.234,50$/);
+  assert.match(formatSignedMoney(0.001), /^R\$\s0,00$/);
+  assert.equal(formatSignedMoney(null), "—");
+});
+
+test("quantity keeps at most two decimals", () => {
+  assert.equal(formatQuantity(226.6), "226,6");
+  assert.equal(formatQuantity(1.5), "1,5");
+  assert.equal(formatQuantity(300), "300");
 });

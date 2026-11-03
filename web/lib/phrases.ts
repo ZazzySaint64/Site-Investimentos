@@ -46,6 +46,32 @@ export function returnPhrase(value: number | null): string {
     : `Em média, subiu ${size} por ano em até 5 anos de histórico, contando proventos.`;
 }
 
+export const CLASS_LABELS: Record<string, string> = {
+  acao_br: "Ação",
+  fii: "Fundo imobiliário",
+  tesouro: "Tesouro Direto",
+  indice: "Índice",
+};
+
+export function formatSignedMoney(value: number | null): string {
+  if (value === null) return MISSING;
+  const size = moneyFormat.format(Math.abs(value));
+  if (size === moneyFormat.format(0)) return size;
+  return `${value < 0 ? "−" : "+"}${size}`;
+}
+
+export function formatQuantity(value: number): string {
+  return value.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+}
+
+export function resultPhrase(result: number): string {
+  const size = moneyFormat.format(Math.abs(result));
+  if (size === moneyFormat.format(0)) return "A carteira nem ganhou nem perdeu até hoje.";
+  return result < 0
+    ? `A carteira perdeu ${size} até hoje, sem contar proventos.`
+    : `A carteira ganhou ${size} até hoje, sem contar proventos.`;
+}
+
 export function riskLabel(volatility: number | null): string {
   if (volatility === null) return MISSING;
   if (volatility < 0.15) return "Baixa";

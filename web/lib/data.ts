@@ -1,5 +1,7 @@
 // Reads from Supabase with the publishable key. The site never calls the external data sources.
 
+import type { DemoTransaction } from "./portfolio.ts";
+
 const PAGE_SIZE = 1000;
 
 export type Stats = {
@@ -37,6 +39,12 @@ export type JobRun = {
 
 export type MacroPoint = { series: string; date: string; value: number };
 export type PricePoint = { date: string; close: number; adj_close: number };
+export type DemoPersona = {
+  slug: string;
+  name: string;
+  risk_profile: string;
+  description: string;
+};
 
 async function get<T>(path: string): Promise<T> {
   const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = process.env;
@@ -88,6 +96,20 @@ export async function getPrices(ticker: string): Promise<PricePoint[]> {
 
 export function getRuns(): Promise<JobRun[]> {
   return get("/job_runs?select=id,job,status,started_at,finished_at,details&order=id.desc&limit=5");
+}
+
+export function getDemoPersonas(): Promise<DemoPersona[]> {
+  return get("/demo_personas?select=slug,name,risk_profile,description&order=id");
+}
+
+const DEMO_COLUMNS =
+  "id,type,quantity,price,date,demo_personas!inner(slug)," +
+  "asset:assets(ticker,name,class,sector,active,prices(close,date),splits(date,ratio))";
+
+export function getDemoTransactions(slug: string): Promise<DemoTransaction[]> {
+  const filter = `demo_personas.slug=eq.${encodeURIComponent(slug)}`;
+  const latestPrice = "asset.prices.order=date.desc&asset.prices.limit=1";
+  return get(`/demo_transactions?select=${DEMO_COLUMNS}&${filter}&${latestPrice}&order=date,id`);
 }
 
 export function getCdiHistory(): Promise<MacroPoint[]> {

@@ -4,14 +4,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Term } from "@/components/Term";
 import type { AssetRow } from "@/lib/data";
-import { formatMoney, formatPercent, formatSignedPercent, riskLabel } from "@/lib/phrases";
+import {
+  CLASS_LABELS,
+  formatMoney,
+  formatPercent,
+  formatSignedPercent,
+  riskLabel,
+} from "@/lib/phrases";
 
-const CLASS_LABELS: Record<string, string> = {
-  acao_br: "Ação",
-  fii: "Fundo imobiliário",
-  tesouro: "Tesouro Direto",
-  indice: "Índice",
-};
 const FILTERS = [
   { value: "", label: "Todos" },
   { value: "acao_br", label: "Ações" },

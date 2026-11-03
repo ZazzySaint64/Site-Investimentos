@@ -53,6 +53,22 @@ export const GLOSSARY = {
     title: "Ibovespa",
     text: "Índice que resume o desempenho das maiores ações da bolsa brasileira. Serve de comparação, e não pode ser comprado diretamente.",
   },
+  carteira: {
+    title: "Carteira",
+    text: "O conjunto de tudo o que uma pessoa investiu. Olhar a carteira inteira mostra melhor o risco do que olhar um ativo sozinho.",
+  },
+  resultado: {
+    title: "Resultado",
+    text: "Quanto a carteira ganhou ou perdeu até hoje. Soma o que já foi embolsado nas vendas com a diferença entre o preço de hoje e o preço pago no que continua na carteira. Não conta proventos, impostos nem custos.",
+  },
+  preco_medio: {
+    title: "Preço médio",
+    text: "O preço pago por cada unidade, em média, considerando todas as compras. Serve para saber se o preço de hoje está acima ou abaixo do que foi pago.",
+  },
+  alocacao: {
+    title: "Alocação",
+    text: "Como o dinheiro está dividido entre os tipos de investimento. Colocar tudo em um só tipo aumenta o risco.",
+  },
   pregao: {
     title: "Pregão",
     text: "Cada dia em que a bolsa funciona. Fins de semana e feriados não contam.",

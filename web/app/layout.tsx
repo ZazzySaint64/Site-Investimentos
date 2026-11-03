@@ -21,6 +21,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/" className="mr-auto font-semibold text-text">
               Site Investimentos
             </Link>
+            <Link href="/demo/ana" className={NAV_LINK}>
+              Carteira de exemplo
+            </Link>
             <Link href="/dados" className={NAV_LINK}>
               Ativos
             </Link>
