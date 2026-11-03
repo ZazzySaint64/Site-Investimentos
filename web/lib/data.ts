@@ -36,7 +36,7 @@ export type JobRun = {
 };
 
 export type MacroPoint = { series: string; date: string; value: number };
-export type PricePoint = { date: string; close: number };
+export type PricePoint = { date: string; close: number; adj_close: number };
 
 async function get<T>(path: string): Promise<T> {
   const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = process.env;
@@ -53,6 +53,15 @@ async function get<T>(path: string): Promise<T> {
   return response.json();
 }
 
+async function getAllPages<T>(path: string): Promise<T[]> {
+  const rows: T[] = [];
+  while (true) {
+    const page = await get<T[]>(`${path}&limit=${PAGE_SIZE}&offset=${rows.length}`);
+    rows.push(...page);
+    if (page.length < PAGE_SIZE) return rows;
+  }
+}
+
 const ASSET_COLUMNS =
   "ticker,name,class,sector,maturity," +
   "asset_stats(as_of,return_annual,volatility,sharpe,max_drawdown,corr_benchmark)," +
@@ -60,7 +69,7 @@ const ASSET_COLUMNS =
 const LATEST_PRICE = "prices.order=date.desc&prices.limit=1";
 
 export function getAssets(): Promise<AssetRow[]> {
-  return get(`/assets?select=${ASSET_COLUMNS}&active=eq.true&${LATEST_PRICE}&order=ticker`);
+  return get(`/assets?select=${ASSET_COLUMNS}&active=eq.true&${LATEST_PRICE}&order=name`);
 }
 
 export async function getAsset(ticker: string): Promise<AssetRow | null> {
@@ -71,28 +80,31 @@ export async function getAsset(ticker: string): Promise<AssetRow | null> {
 
 export async function getPrices(ticker: string): Promise<PricePoint[]> {
   const filter = `assets.ticker=eq.${encodeURIComponent(ticker)}`;
-  const prices: PricePoint[] = [];
-  while (true) {
-    const page = await get<PricePoint[]>(
-      `/prices?select=date,close,assets!inner(ticker)&${filter}&order=date` +
-        `&limit=${PAGE_SIZE}&offset=${prices.length}`,
-    );
-    prices.push(...page.map(({ date, close }) => ({ date, close })));
-    if (page.length < PAGE_SIZE) return prices;
-  }
+  const rows = await getAllPages<PricePoint>(
+    `/prices?select=date,close,adj_close,assets!inner(ticker)&${filter}&order=date`,
+  );
+  return rows.map(({ date, close, adj_close }) => ({ date, close, adj_close }));
 }
 
 export function getRuns(): Promise<JobRun[]> {
   return get("/job_runs?select=id,job,status,started_at,finished_at,details&order=id.desc&limit=5");
 }
 
-export async function getLatestMacro(): Promise<MacroPoint[]> {
-  const rows = await Promise.all(
-    ["selic", "cdi", "ipca"].map((series) =>
-      get<MacroPoint[]>(
-        `/macro_series?select=series,date,value&series=eq.${series}&order=date.desc&limit=1`,
-      ),
-    ),
+export function getCdiHistory(): Promise<MacroPoint[]> {
+  return getAllPages(`/macro_series?select=series,date,value&series=eq.cdi&order=date`);
+}
+
+async function latestMacro(series: string, count: number): Promise<MacroPoint[]> {
+  return get(
+    `/macro_series?select=series,date,value&series=eq.${series}&order=date.desc&limit=${count}`,
   );
-  return rows.flat();
+}
+
+export async function getMacroSummary() {
+  const [selic, cdi, ipca] = await Promise.all([
+    latestMacro("selic", 1),
+    latestMacro("cdi", 1),
+    latestMacro("ipca", 12),
+  ]);
+  return { selic: selic[0], cdi: cdi[0], ipca };
 }

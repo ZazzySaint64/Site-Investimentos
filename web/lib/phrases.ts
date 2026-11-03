@@ -16,7 +16,9 @@ export function formatPercent(value: number | null): string {
 
 export function formatSignedPercent(value: number | null): string {
   if (value === null) return MISSING;
-  return `${value < 0 ? "−" : "+"}${percentFormat.format(Math.abs(value) * 100)}%`;
+  const size = percentFormat.format(Math.abs(value) * 100);
+  if (size === percentFormat.format(0)) return `${size}%`;
+  return `${value < 0 ? "−" : "+"}${size}%`;
 }
 
 export function formatMoney(value: number | null): string {
@@ -42,6 +44,70 @@ export function returnPhrase(value: number | null): string {
   return value < 0
     ? `Em média, caiu ${size} por ano em até 5 anos de histórico, contando proventos.`
     : `Em média, subiu ${size} por ano em até 5 anos de histórico, contando proventos.`;
+}
+
+export function riskLabel(volatility: number | null): string {
+  if (volatility === null) return MISSING;
+  if (volatility < 0.15) return "Baixa";
+  return volatility < 0.3 ? "Média" : "Alta";
+}
+
+export function accumulatedFromMonthly(monthlyPercents: number[]): number {
+  return monthlyPercents.reduce((total, percent) => total * (1 + percent / 100), 1) - 1;
+}
+
+export function formatMonthYear(isoDate: string): string {
+  const months = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  return `${months[Number(isoDate.slice(5, 7)) - 1]}/${isoDate.slice(0, 4)}`;
+}
+
+function yearsBefore(isoDate: string, years: number): string {
+  return `${Number(isoDate.slice(0, 4)) - years}${isoDate.slice(4)}`;
+}
+
+/** What R$ 1.000 became over the last five years, or over the whole history if it is shorter. */
+export function growthOfThousand(
+  prices: { date: string; adj_close: number }[],
+  cdi: { date: string; value: number }[],
+): { since: string; asset: number; cdi: number | null } | null {
+  const last = prices[prices.length - 1];
+  if (!last || prices[0].date > yearsBefore(last.date, 1)) return null;
+  const limit = yearsBefore(last.date, 5);
+  const first = prices.find((point) => point.date >= limit) ?? prices[0];
+  const days = cdi.filter((point) => point.date > first.date && point.date <= last.date);
+  return {
+    since: first.date,
+    asset: (1000 * last.adj_close) / first.adj_close,
+    cdi: days.length
+      ? days.reduce((total, point) => total * (1 + point.value / 100), 1000)
+      : null,
+  };
+}
+
+function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`;
+}
+
+export function runSummary(details: {
+  failed?: string[];
+  rejected?: unknown[];
+  error?: string;
+}): string {
+  if (details.error) return "A atualização parou por um erro.";
+  const parts = [];
+  if (details.failed?.length) {
+    const text = plural(details.failed.length, "item não foi atualizado", "itens não foram atualizados");
+    parts.push(`${text}.`);
+  }
+  if (details.rejected?.length) {
+    const text = plural(
+      details.rejected.length,
+      "preço com erro na fonte foi descartado",
+      "preços com erro na fonte foram descartados",
+    );
+    parts.push(`${text}.`);
+  }
+  return parts.join(" ") || "Tudo foi atualizado.";
 }
 
 export function yearTicks(isoDates: string[]): string[] {
