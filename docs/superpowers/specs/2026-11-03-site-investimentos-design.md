@@ -32,7 +32,7 @@ Alertas, notícias, imposto de renda, importação da B3, Open Finance, provento
 | Stack | Next.js, TypeScript, Tailwind, Recharts, Supabase, Python, GitHub Actions, Vercel |
 | Modelo de IA | Groq, plano gratuito |
 | Visual | "Terminal calmo": escuro e denso, com frase simples sob cada número |
-| Autoria | Misto: o autor constrói painel, ativo e lançamento em modo guiado; Claude constrói o resto |
+| Autoria | Misto: o autor constrói o painel da carteira real, ativo e lançamento em modo guiado; Claude constrói o resto, incluindo o painel do demo |
 | Custo e prazo | Custo zero, sem data limite |
 | Idioma | Interface em português do Brasil; README em português e inglês |
 
@@ -300,7 +300,7 @@ Começa com `llama-3.3-70b-versatile`. A fase 0 compara com `openai/gpt-oss-120b
 |---|---|---|---|
 | 1 | Início | Proposta do site e botão "ver demo" | Claude |
 | 2 | Questionário | 5 perguntas, perfil e meta | Claude |
-| 3 | Painel | Valor, resultado, nota, alocação, posições | Autor, guiado |
+| 3 | Painel | Valor, resultado, nota, alocação, posições | Demo: Claude. Carteira real: autor, guiado |
 | 4 | Lançamento | Compra, venda e renda fixa | Autor, guiado (primeira a ser feita) |
 | 5 | Ativo | Gráfico, estatísticas, faixa de previsão, confiabilidade | Autor, guiado |
 | 6 | Simulador | Monte Carlo e rebalanceamento | Claude |
@@ -357,7 +357,7 @@ Números em fonte monoespaçada; texto em fonte do sistema. As faixas de previs�
 ## 12. Testes
 
 - **Python (`pytest`):** estatísticas com séries de resultado conhecido, validação de preços, motor de regras e prova de que o ML não vê dados futuros.
-- **TypeScript (`vitest`):** posições com venda parcial e desdobramento, nota de saúde, Monte Carlo com semente fixa, validador de números e filtros da IA.
+- **TypeScript (`node --test`):** posições com venda parcial e desdobramento, nota de saúde, Monte Carlo com semente fixa, validador de números e filtros da IA.
 - **RLS e funções SQL:** usuário A tenta ler e alterar dados do usuário B; lançamentos inválidos são rejeitados.
 - **IA:** cerca de 30 perguntas difíceis, incluindo prompt injection e "o que eu compro?". Rodam manualmente antes de cada deploy do chat, para não gastar cota.
 - **Fluxo completo:** um teste Playwright abre o demo e navega pelas telas.
