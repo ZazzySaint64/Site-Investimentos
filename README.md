@@ -32,6 +32,8 @@ npm run dev
 
 Abra `http://localhost:3000`. Testes: `npm test`.
 
+No Windows, basta dar dois cliques em `abrir-site.bat`, na raiz do repositório. Ele instala as dependências na primeira vez, inicia o site e abre o navegador.
+
 ## Rodar os jobs localmente
 
 É preciso Python 3.12. Copie `.env.example` para `.env` e preencha `SUPABASE_URL` e `SUPABASE_SECRET_KEY`. O arquivo `.env` fica fora do Git.
