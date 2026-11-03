@@ -7,7 +7,7 @@ Validações feitas em 2026-11-03.
 | `yfinance` | Aprovado |
 | Tesouro Transparente | Aprovado |
 | API SGS do Banco Central | Aprovado |
-| Supabase | Aprovado nos limites oficiais; projeto ainda não criado |
+| Supabase | Aprovado; projeto criado em `us-east-1`; falta a senha em `DATABASE_URL` |
 | Vercel | Aprovado |
 | Groq | Aprovado com `openai/gpt-oss-120b`; `llama-3.3-70b-versatile` não existe mais para esta conta |
 
@@ -54,6 +54,12 @@ Resultado local, 10 anos:
 O tempo de resposta varia: uma janela de 9 anos passou de 20 s em um teste anterior. O job usa janelas de um ano, com timeout de 60 s. HTTP 404 significa janela sem dados, não erro.
 
 ## Supabase
+
+Projeto `site-investimentos` criado e saudável, com Postgres 17. A chave secreta respondeu HTTP 200 na API REST e a chave publicável, HTTP 200 na API de autenticação.
+
+**Região:** o projeto ficou em `us-east-1`, não em `sa-east-1` como o plano pedia. A spec não fixa região. As funções da Vercel rodam por [padrão em `iad1`](https://vercel.com/docs/functions/configuring-functions/region), Washington, perto de `us-east-1`, então a rota do chat fica perto do banco. Quem está no Brasil espera mais nas leituras diretas do navegador ao banco. Trocar de região exige criar outro projeto, o que hoje não custa nada, porque o banco está vazio.
+
+**Pendência:** `DATABASE_URL` ainda tem o marcador de senha. A Tarefa 6 precisa da senha real para aplicar a migration.
 
 Plano gratuito, segundo a [página de preços](https://supabase.com/pricing):
 
