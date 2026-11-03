@@ -48,3 +48,4 @@ if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
         fh.write(report + "\n")
 raise SystemExit(1 if failed else 0)
 # run 2
+# run 3
