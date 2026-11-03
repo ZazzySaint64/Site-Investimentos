@@ -47,3 +47,4 @@ if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
     with open(summary, "a", encoding="utf-8") as fh:
         fh.write(report + "\n")
 raise SystemExit(1 if failed else 0)
+# run 2
