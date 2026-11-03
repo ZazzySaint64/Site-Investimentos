@@ -59,7 +59,7 @@ Projeto `site-investimentos` criado e saudável, com Postgres 17. A chave secret
 
 **Região:** o projeto ficou em `us-east-1`, não em `sa-east-1` como o plano pedia. A spec não fixa região. As funções da Vercel rodam por [padrão em `iad1`](https://vercel.com/docs/functions/configuring-functions/region), Washington, perto de `us-east-1`, então a rota do chat fica perto do banco. Quem está no Brasil espera mais nas leituras diretas do navegador ao banco. Trocar de região exige criar outro projeto, o que hoje não custa nada, porque o banco está vazio.
 
-**Pendência:** `DATABASE_URL` ainda tem o marcador de senha. A Tarefa 6 precisa da senha real para aplicar a migration.
+**Pendência:** `DATABASE_URL` ainda tem o marcador de senha. A Tarefa 5 precisa da senha real para aplicar a migration.
 
 Plano gratuito, segundo a [página de preços](https://supabase.com/pricing):
 
