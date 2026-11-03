@@ -95,3 +95,10 @@ def test_client_error_raises_without_retry(http):
     with pytest.raises(requests.HTTPError):
         fetch_series(12, date(2026, 1, 1), date(2026, 1, 2))
     assert http.calls == 1
+
+
+def test_monthly_series_drops_dates_before_the_window(http):
+    # The API also returns the first day of the month that contains the window start.
+    http.json = [{"data": "01/11/2017", "valor": "0.28"}, {"data": "01/12/2017", "valor": "0.44"}]
+    rows = fetch_series(433, date(2017, 11, 4), date(2018, 11, 4))
+    assert rows == [(date(2017, 12, 1), 0.44)]

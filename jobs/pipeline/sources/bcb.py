@@ -29,7 +29,9 @@ def fetch_series(code: int, start: date, end: date) -> list[tuple[date, float]]:
     if response.status_code == HTTP_NO_DATA:
         return []
     response.raise_for_status()
-    return [
+    rows = [
         (datetime.strptime(item["data"], "%d/%m/%Y").date(), float(item["valor"]))
         for item in response.json()
     ]
+    # For monthly series, the API also returns the first day of the month that contains start.
+    return [(day, value) for day, value in rows if start <= day <= end]

@@ -5,3 +5,7 @@ markers = ["integration: uses the remote Supabase project"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint.per-file-ignores]
+# The job isolates failures by asset, so any exception from one asset must not stop the others.
+"pipeline/nightly.py" = ["BLE001"]
