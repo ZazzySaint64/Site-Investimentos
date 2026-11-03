@@ -1,0 +1,17 @@
+name: keepalive
+on:
+  schedule:
+    - cron: "0 12 1 * *"
+  workflow_dispatch:
+permissions:
+  actions: write
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # GitHub disables scheduled workflows after 60 days without repository activity.
+      - run: gh api -X PUT repos/${{ github.repository }}/actions/workflows/nightly.yml/enable
+      - run: gh api -X PUT repos/${{ github.repository }}/actions/workflows/keepalive.yml/enable
