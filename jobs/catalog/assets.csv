@@ -1,0 +1,102 @@
+ticker,name,class,currency,sector,ml_enabled
+PETR4,Petrobras PN,acao_br,BRL,Petróleo e gás,true
+VALE3,Vale,acao_br,BRL,Mineração,true
+ITUB4,Itaú Unibanco,acao_br,BRL,Bancos,true
+PETR3,Petrobras ON,acao_br,BRL,Petróleo e gás,true
+AXIA3,Axia Energia,acao_br,BRL,Energia,true
+SBSP3,Sabesp,acao_br,BRL,Saneamento,true
+ITSA4,Itaúsa,acao_br,BRL,Bancos,true
+EMBJ3,Embraer,acao_br,BRL,Indústria,true
+BBDC4,Bradesco PN,acao_br,BRL,Bancos,true
+WEGE3,WEG,acao_br,BRL,Indústria,true
+B3SA3,B3,acao_br,BRL,Bancos,true
+BPAC11,BTG Pactual,acao_br,BRL,Bancos,true
+ABEV3,Ambev,acao_br,BRL,Consumo,true
+PRIO3,PRIO,acao_br,BRL,Petróleo e gás,true
+ENEV3,Eneva,acao_br,BRL,Energia,true
+BBAS3,Banco do Brasil,acao_br,BRL,Bancos,true
+CPLE3,Copel,acao_br,BRL,Energia,true
+EQTL3,Equatorial,acao_br,BRL,Energia,true
+VBBR3,Vibra,acao_br,BRL,Petróleo e gás,true
+UGPA3,Ultrapar,acao_br,BRL,Petróleo e gás,true
+RDOR3,Rede D'Or,acao_br,BRL,Saúde,false
+GGBR4,Gerdau,acao_br,BRL,Siderurgia,false
+SUZB3,Suzano,acao_br,BRL,Papel e celulose,false
+RENT3,Localiza,acao_br,BRL,Transporte,false
+BBSE3,BB Seguridade,acao_br,BRL,Seguros,false
+VIVT3,Vivo,acao_br,BRL,Telecom,false
+RADL3,RaiaDrogasil,acao_br,BRL,Saúde,false
+RAIL3,Rumo,acao_br,BRL,Transporte,false
+BBDC3,Bradesco ON,acao_br,BRL,Bancos,false
+CMIG4,Cemig,acao_br,BRL,Energia,false
+CSMG3,Copasa,acao_br,BRL,Saneamento,false
+TOTS3,Totvs,acao_br,BRL,Tecnologia,false
+ENGI11,Energisa,acao_br,BRL,Energia,false
+TIMS3,TIM,acao_br,BRL,Telecom,false
+MOTV3,Motiva,acao_br,BRL,Transporte,false
+KLBN11,Klabin,acao_br,BRL,Papel e celulose,false
+CXSE3,Caixa Seguridade,acao_br,BRL,Seguros,false
+EGIE3,Engie Brasil,acao_br,BRL,Energia,false
+MBRF3,MBRF,acao_br,BRL,Agronegócio,false
+ISAE4,ISA Energia,acao_br,BRL,Energia,false
+ALOS3,Allos,acao_br,BRL,Varejo,false
+ASAI3,Assaí,acao_br,BRL,Varejo,false
+GOAU4,Metalúrgica Gerdau,acao_br,BRL,Siderurgia,false
+FLRY3,Fleury,acao_br,BRL,Saúde,false
+LREN3,Lojas Renner,acao_br,BRL,Varejo,false
+TAEE11,Taesa,acao_br,BRL,Energia,false
+SMFT3,Smart Fit,acao_br,BRL,Consumo,false
+SANB11,Santander Brasil,acao_br,BRL,Bancos,false
+MULT3,Multiplan,acao_br,BRL,Varejo,false
+PSSA3,Porto Seguro,acao_br,BRL,Seguros,false
+CPFE3,CPFL Energia,acao_br,BRL,Energia,false
+CMIN3,CSN Mineração,acao_br,BRL,Mineração,false
+HYPE3,Hypera,acao_br,BRL,Saúde,false
+CSAN3,Cosan,acao_br,BRL,Petróleo e gás,false
+BRAV3,Brava Energia,acao_br,BRL,Petróleo e gás,false
+IGTI11,Iguatemi,acao_br,BRL,Varejo,false
+BRAP4,Bradespar,acao_br,BRL,Mineração,false
+CYRE3,Cyrela,acao_br,BRL,Construção,false
+CURY3,Cury,acao_br,BRL,Construção,false
+NATU3,Natura,acao_br,BRL,Consumo,false
+AURE3,Auren,acao_br,BRL,Energia,false
+COGN3,Cogna,acao_br,BRL,Educação,false
+CSNA3,CSN,acao_br,BRL,Siderurgia,false
+POMO4,Marcopolo,acao_br,BRL,Indústria,false
+DIRR3,Direcional,acao_br,BRL,Construção,false
+USIM5,Usiminas,acao_br,BRL,Siderurgia,false
+TEND3,Tenda,acao_br,BRL,Construção,false
+YDUQ3,Yduqs,acao_br,BRL,Educação,false
+VIVA3,Vivara,acao_br,BRL,Varejo,false
+MGLU3,Magazine Luiza,acao_br,BRL,Varejo,false
+KNCR11,Kinea Rendimentos,fii,BRL,FII Papel,true
+BTLG11,BTG Logística,fii,BRL,FII Logística,true
+KNIP11,Kinea Índices de Preços,fii,BRL,FII Papel,true
+HGLG11,Pátria Log,fii,BRL,FII Logística,true
+XPML11,XP Malls,fii,BRL,FII Shoppings,true
+MXRF11,Maxi Renda,fii,BRL,FII Papel,false
+XPLG11,XP Log,fii,BRL,FII Logística,false
+KNRI11,Kinea Renda Imobiliária,fii,BRL,FII Híbrido,false
+TRXF11,TRX Real Estate,fii,BRL,FII Renda urbana,false
+GGRC11,GGR Covepi,fii,BRL,FII Logística,false
+KNHY11,Kinea High Yield,fii,BRL,FII Papel,false
+VISC11,Vinci Shopping Centers,fii,BRL,FII Shoppings,false
+HGRU11,Pátria Renda Urbana,fii,BRL,FII Renda urbana,false
+HGBS11,Hedge Brasil Shopping,fii,BRL,FII Shoppings,false
+CPTS11,Capitânia Securities,fii,BRL,FII Papel,false
+KNUQ11,Kinea Unique,fii,BRL,FII Papel,false
+GARE11,Guardian Real Estate,fii,BRL,FII Híbrido,false
+KNSC11,Kinea Securities,fii,BRL,FII Papel,false
+IRIM11,Iridium Recebíveis,fii,BRL,FII Papel,false
+BRCO11,Bresco Logística,fii,BRL,FII Logística,false
+RECR11,REC Recebíveis,fii,BRL,FII Papel,false
+KNHF11,Kinea Hedge Fund,fii,BRL,FII Híbrido,false
+BTHF11,BTG Hedge Fund,fii,BRL,FII Híbrido,false
+HSML11,HSI Malls,fii,BRL,FII Shoppings,false
+PVBI11,VBI Prime Properties,fii,BRL,FII Lajes,false
+ALZR11,Alianza Trust,fii,BRL,FII Renda urbana,false
+LVBI11,VBI Logístico,fii,BRL,FII Logística,false
+MCCI11,Mauá Capital Recebíveis,fii,BRL,FII Papel,false
+HGCR11,Pátria Recebíveis,fii,BRL,FII Papel,false
+HFOF11,Hedge Top FOFII,fii,BRL,FII Híbrido,false
+^BVSP,Ibovespa,indice,BRL,,false
