@@ -8,6 +8,7 @@ if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
+  workers: 1, // the tests share real users
   use: { baseURL: "http://localhost:3000" },
   webServer: {
     command: "npm run dev",
