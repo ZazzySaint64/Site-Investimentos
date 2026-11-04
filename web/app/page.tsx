@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { DataDate } from "@/components/DataFreshness";
 import { getAssets } from "@/lib/data";
 
@@ -31,9 +32,17 @@ const COMING = [
   "Assistente de IA que só afirma o que os dados mostram",
 ];
 
-export default async function Home() {
-  const assets = await getAssets();
+// Reads the database at request time, so the rest of the page stays prerendered.
+async function AssetCount() {
+  try {
+    const assets = await getAssets();
+    return <p className="text-sm text-muted">{assets.length} ativos acompanhados.</p>;
+  } catch {
+    return null;
+  }
+}
 
+export default function Home() {
   return (
     <main className="mx-auto max-w-6xl space-y-12 px-4 py-12">
       <section className="max-w-3xl space-y-5">
@@ -58,7 +67,9 @@ export default async function Home() {
             Explorar ativos
           </Link>
         </div>
-        <p className="text-sm text-muted">{assets.length} ativos acompanhados.</p>
+        <Suspense fallback={null}>
+          <AssetCount />
+        </Suspense>
         <DataDate />
       </section>
 
