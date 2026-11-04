@@ -32,7 +32,7 @@ Alertas, notícias, imposto de renda, importação da B3, Open Finance, provento
 | Stack | Next.js, TypeScript, Tailwind, Recharts, Supabase, Python, GitHub Actions, Vercel |
 | Modelo de IA | Groq, plano gratuito |
 | Visual | "Terminal calmo": escuro e denso, com frase simples sob cada número |
-| Autoria | Misto: o autor constrói o painel da carteira real, ativo e lançamento em modo guiado; Claude constrói o resto, incluindo o painel do demo |
+| Autoria | Claude constrói o site, sob direção do autor. O autor decide, testa e configura os painéis |
 | Custo e prazo | Custo zero, sem data limite |
 | Idioma | Interface em português do Brasil; README em português e inglês |
 
@@ -300,14 +300,14 @@ Começa com `llama-3.3-70b-versatile`. A fase 0 compara com `openai/gpt-oss-120b
 |---|---|---|---|
 | 1 | Início | Proposta do site e botão "ver demo" | Claude |
 | 2 | Questionário | 5 perguntas, perfil e meta | Claude |
-| 3 | Painel | Valor, resultado, nota, alocação, posições | Demo: Claude. Carteira real: autor, guiado |
-| 4 | Lançamento | Compra, venda e renda fixa | Autor, guiado (primeira a ser feita) |
-| 5 | Ativo | Gráfico, estatísticas, faixa de previsão, confiabilidade | Autor, guiado |
+| 3 | Painel | Valor, resultado, nota, alocação, posições | Claude |
+| 4 | Lançamento | Compra, venda e renda fixa | Claude |
+| 5 | Ativo | Gráfico, estatísticas, faixa de previsão, confiabilidade | Claude |
 | 6 | Simulador | Monte Carlo e rebalanceamento | Claude |
 | 7 | Chat | Painel lateral em todas as telas | Claude |
 | 8 | Metodologia | Fórmulas, fontes, backtest e limites | Claude |
 
-Todo o restante (banco, jobs, ML, login, integração da IA e estrutura inicial) fica com Claude. O README descreve essa divisão.
+O README informa como o site foi construído.
 
 O login é pelo Supabase Auth, com Google e com e-mail e senha.
 
@@ -397,4 +397,3 @@ Cada fase deixa o site funcionando.
 | ML não vence o modelo ingênuo | Previsões fracas | A tela diz isso e usa a faixa ingênua |
 | Filtro de recomendação falha | IA sugere ativo na carteira real | Conjunto de avaliação; limite declarado; aviso fixo |
 | Validador rejeita respostas boas | Mais falhas no chat | Ajustar com o conjunto de avaliação |
-| Autor com pouca experiência em React | Telas guiadas demoram | Sem prazo; começar pela tela menor |

@@ -1,6 +1,6 @@
 # Fase 3: carteira real. Plano de implementação
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. **As Tarefas 5, 6 e 7 não vão para subagente:** o autor escreve o código na sessão principal, em modo guiado.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Uma pessoa cria conta, responde ao questionário, lança compras, vendas e renda fixa e vê a própria carteira no painel. Ninguém mais lê ou altera esses dados.
 
@@ -24,7 +24,7 @@ A spec não decide estes pontos, ou entra em conflito com fatos novos. O plano s
    - **Rejeitada:** desligar a confirmação. A conta nasceria com e-mail tratado como confirmado sem prova de posse. Como o Supabase [liga contas com o mesmo e-mail](https://supabase.com/docs/guides/auth/auth-identity-linking), alguém poderia criar uma senha no e-mail de outra pessoa antes de ela entrar com Google. Isso é uma inferência a partir da documentação, não um teste.
 2. **Apagar conta sem chave secreta.** A seção 11 da spec põe a chave secreta na rota de apagar conta, mas a regra do projeto é nunca ter essa chave em `web/`. O plano usa a função SQL `delete_my_account()`, que apaga só o usuário da sessão. A Tarefa 8 atualiza a spec.
 3. **Pontuação do questionário.** A spec define as perguntas, mas não a conta. O plano soma de 0 a 2 pontos por pergunta: até 3 é conservador, de 4 a 6 é moderado e de 7 a 10 é arrojado. É escolha de projeto e a tela de metodologia da fase 5 a apresentará como tal.
-4. **Tela do ativo.** `/dados/[ticker]` já tem gráfico e estatísticas, feitos por Claude na fase 1. Nesta fase, a parte do autor é o bloco "Sua posição" nessa mesma página. Não há tela nova nem reescrita da existente.
+4. **Tela do ativo.** `/dados/[ticker]` já tem gráfico e estatísticas, feitos por Claude na fase 1. Nesta fase, a tela ganha o bloco "Sua posição" nessa mesma página. Não há tela nova nem reescrita da existente.
 5. **Dependências novas:** `@supabase/ssr` e `@supabase/supabase-js`. Renovar token e guardar sessão em cookie é código de segurança, e por isso vale a dependência oficial.
 
 ## Global Constraints
@@ -33,7 +33,7 @@ A spec não decide estes pontos, ou entra em conflito com fatos novos. O plano s
 - A chave secreta nunca entra em `web/`. O site usa só `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY`. Nenhuma variável nova na Vercel.
 - O site nunca chama as fontes externas. Ele lê apenas do banco.
 - **Toda tarefa termina com um teste pela interface do projeto**, descrito no passo "Testar pela interface". Depois dela, `abrir-site.bat` precisa mostrar o que a tarefa entregou.
-- Autoria: o autor constrói lançamento, painel da carteira real e ativo, em modo guiado e nessa ordem. Claude constrói o resto.
+- Autoria: Claude constrói todas as telas, por decisão do autor em 2026-11-04. O modo guiado saiu do projeto.
 - Carteira real: a tela nunca sugere comprar ou vender um ativo específico.
 - Questionário: "Este questionário é simplificado e não substitui avaliação profissional."
 - A posição nunca é salva. É sempre calculada a partir das transações.
@@ -480,7 +480,7 @@ git commit -m "feat: adiciona questionario de perfil"
 
 ### Task 4: Cálculo e dados da carteira
 
-Claude deixa pronta a parte de dados e cálculo. O autor constrói as telas nas Tarefas 5 a 7 sobre estas funções.
+Claude deixa pronta a parte de dados e cálculo. As telas das Tarefas 5 a 7 usam estas funções.
 
 **Files:**
 - Create: `web/lib/fixed-income.ts`
@@ -608,17 +608,7 @@ git add web
 git commit -m "feat: adiciona calculo e dados da carteira real"
 ```
 
-### Como funcionam as Tarefas 5, 6 e 7
-
-Rodam na sessão principal, com o autor e a skill `modo-guiado-codigo-didatico`.
-
-- **Claude escreve** o teste de aceitação, antes do código, e o boilerplate que não faz parte do aprendizado.
-- **O autor escreve** a tela: componentes, Server Actions, leitura do formulário, condições e laços. Claude explica onde cada trecho entra e mostra a forma da linha, com lacunas. Claude não preenche a lógica, mesmo se o autor pedir "só essa vez". Nesse caso, dá uma pista mais detalhada.
-- **Claude revisa** o que o autor escreveu e aponta erros. Pode mostrar correções pontuais.
-- **Modelo para consulta:** `app/demo/[persona]/page.tsx`. Copiar e adaptar é permitido. Não extraia componentes compartilhados agora: com duas telas, a duplicação custa menos que a abstração.
-- A tarefa termina quando o teste de aceitação passa e o autor faz o teste pela interface. Commit na branch, com autorização do autor.
-
-### Task 5: [AUTOR, GUIADO] Lançamento
+### Task 5: Lançamento
 
 **Files:**
 - Create: `web/app/carteira/lancar/page.tsx`, `web/app/carteira/lancar/TransactionForm.tsx`, `web/app/carteira/lancar/FixedIncomeForm.tsx`, `web/app/carteira/lancar/actions.ts`, `web/e2e/carteira.spec.ts`
@@ -626,7 +616,7 @@ Rodam na sessão principal, com o autor e a skill `modo-guiado-codigo-didatico`.
 
 **Interfaces:**
 - Consumes: `requireUser`; `getTransactions`, `getFixedIncome`, `addTransaction`, `deleteTransaction`, `addFixedIncome`, `deleteFixedIncome`, `ActionResult`; `getHoldableAssets`; `todayInBrazil`, `hasLaterSplit` e formatadores; `DataDate`, `Term`.
-- Produces: rota `/carteira/lancar`, com `instant = false`. Em `e2e/session.ts`, escritas por Claude: `launch(page: Page, input: { asset: string; operation: "Compra" | "Venda"; quantity: string; price: string; date: string }): Promise<void>` e `deleteEverything(page: Page): Promise<void>`, que apaga tudo pela tela de lançamento.
+- Produces: rota `/carteira/lancar`, com `instant = false`. Em `e2e/session.ts`: `launch(page: Page, input: { asset: string; operation: "Compra" | "Venda"; quantity: string; price: string; date: string }): Promise<void>` e `deleteEverything(page: Page): Promise<void>`, que apaga tudo pela tela de lançamento.
 
 Rótulos fixos, porque o teste de aceitação os usa:
 
@@ -644,7 +634,7 @@ Comportamento:
 - Frase sob o título: "A quantidade e o preço são os da data da operação. Desdobramentos posteriores são corrigidos automaticamente."
 - Link "Ver minha carteira", para `/carteira`.
 
-- [ ] **Step 1: Claude escreve o teste de aceitação e confirma a falha**
+- [ ] **Step 1: Escrever o teste de aceitação e confirmar a falha**
 
 ```ts
 test.describe.configure({ mode: "serial" });
@@ -670,18 +660,14 @@ test("fixed income is saved and can be deleted", async ({ page }) => { /* com os
 Run: `cd web && npm run test:e2e -- carteira`
 Expected: FAIL, a rota não existe.
 
-- [ ] **Step 2: Autor constrói a tela, em modo guiado**
-
-Ordem sugerida: a página com `requireUser` e a lista; o formulário de compra e venda com a Server Action; apagar; renda fixa.
+- [ ] **Step 2: Construir a tela**
 
 - [ ] **Step 3: Rodar**
 
 Run: `cd web && npm test && npm run lint && npx tsc --noEmit && npm run build && npm run test:e2e -- carteira`
 Expected: tudo passa.
 
-- [ ] **Step 4: Claude revisa e o autor corrige**
-
-- [ ] **Step 5: Testar pela interface**
+- [ ] **Step 4: Testar pela interface**
 
 Com `abrir-site.bat`:
 
@@ -693,14 +679,14 @@ Com `abrir-site.bat`:
 - Lance um CDB com início antes de 03/11/2016: a mensagem diz desde quando há CDI.
 - Largura de 375 px sem rolagem horizontal.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add web
 git commit -m "feat: adiciona tela de lancamento"
 ```
 
-### Task 6: [AUTOR, GUIADO] Painel da carteira real
+### Task 6: Painel da carteira real
 
 **Files:**
 - Modify: `web/app/carteira/page.tsx`, substituindo a tela provisória
@@ -721,7 +707,7 @@ De cima para baixo, como o demo, mas sem faixa de exemplo nem seletor de persona
 
 A tela não sugere comprar nem vender.
 
-- [ ] **Step 1: Claude escreve o teste de aceitação e confirma a falha**
+- [ ] **Step 1: Escrever o teste de aceitação e confirmar a falha**
 
 ```ts
 test("an empty wallet invites to launch or see the demo", async ({ page }) => {
@@ -750,16 +736,14 @@ test("fixed income appears without a link to an asset page", async ({ page }) =>
 Run: `cd web && npm run test:e2e -- carteira`
 Expected: FAIL.
 
-- [ ] **Step 2: Autor constrói a tela, em modo guiado**
+- [ ] **Step 2: Construir a tela**
 
 - [ ] **Step 3: Rodar**
 
 Run: `cd web && npm test && npm run lint && npx tsc --noEmit && npm run build && npm run test:e2e`
 Expected: tudo passa.
 
-- [ ] **Step 4: Claude revisa e o autor corrige**
-
-- [ ] **Step 5: Testar pela interface**
+- [ ] **Step 4: Testar pela interface**
 
 Com `abrir-site.bat`, entre com uma conta nova:
 
@@ -769,14 +753,14 @@ Com `abrir-site.bat`, entre com uma conta nova:
 - Toque em um termo sublinhado: o glossário abre.
 - Largura de 375 px sem rolagem horizontal.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add web
 git commit -m "feat: adiciona painel da carteira real"
 ```
 
-### Task 7: [AUTOR, GUIADO] Ativo: sua posição
+### Task 7: Ativo: sua posição
 
 **Files:**
 - Create: `web/app/dados/[ticker]/MyPosition.tsx`
@@ -788,7 +772,7 @@ git commit -m "feat: adiciona painel da carteira real"
 
 Sem sessão ou sem posição, não mostra nada. Com posição, a seção "Sua posição": quantidade, preço médio, valor, resultado com sinal e a frase "Você comprou por {preço médio} em média. Hoje cada unidade vale {preço}." Link "Lançar" para `/carteira/lancar`. Nenhuma sugestão de compra ou venda. A faixa de previsão e o backtest chegam na fase 5.
 
-- [ ] **Step 1: Claude escreve o teste de aceitação e confirma a falha**
+- [ ] **Step 1: Escrever o teste de aceitação e confirmar a falha**
 
 ```ts
 test("the asset page shows the position only to whoever holds it", async ({ page, browser }) => {
@@ -812,20 +796,18 @@ test("the asset page shows the position only to whoever holds it", async ({ page
 Run: `cd web && npm run test:e2e -- carteira`
 Expected: FAIL.
 
-- [ ] **Step 2: Autor constrói o bloco, em modo guiado**
+- [ ] **Step 2: Construir o bloco**
 
 - [ ] **Step 3: Rodar**
 
 Run: `cd web && npm test && npm run lint && npx tsc --noEmit && npm run build && npm run test:e2e`
 Expected: tudo passa.
 
-- [ ] **Step 4: Claude revisa e o autor corrige**
-
-- [ ] **Step 5: Testar pela interface**
+- [ ] **Step 4: Testar pela interface**
 
 Com `abrir-site.bat`: a partir do painel, clique em um ativo seu e veja "Sua posição". Em janela anônima, a mesma página abre sem o bloco. Venda tudo: o bloco some.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add web
@@ -840,7 +822,7 @@ git commit -m "feat: mostra a posicao na pagina do ativo"
 **Interfaces:**
 - Consumes: todas as telas das Tarefas 2 a 7.
 
-`/`: "Sua própria carteira, com login" passa para "Pronto para usar", e a tela ganha um botão secundário "Criar minha carteira", que leva a `/entrar`. README: estado atual, divisão de autoria entre autor e Claude, e o aviso de que a Brevo ou outro SMTP é configurado no painel. Spec, seção 11: "A chave secreta do Supabase só existe nos secrets do GitHub. Apagar a conta usa a função SQL `delete_my_account`, que age só sobre o usuário da sessão."
+`/`: "Sua própria carteira, com login" passa para "Pronto para usar", e a tela ganha um botão secundário "Criar minha carteira", que leva a `/entrar`. README: estado atual, que o site foi construído com Claude sob direção do autor, e o aviso de que a Brevo ou outro SMTP é configurado no painel. Spec, seção 11: "A chave secreta do Supabase só existe nos secrets do GitHub. Apagar a conta usa a função SQL `delete_my_account`, que age só sobre o usuário da sessão."
 
 - [ ] **Step 1: Escrever os testes**
 
@@ -911,7 +893,7 @@ git commit -m "test: prova o isolamento entre usuarios e atualiza a documentacao
 
 - [ ] **Step 1: Revisão da branch**
 
-Revisor novo, no modelo mais capaz disponível sem créditos pagos. Foco: autorização nas Server Actions, RLS, cache de dados de usuário e a Review Focus. Uma passada de correção, com teste que falha antes. As correções nas telas do autor seguem em modo guiado.
+Revisor novo, no modelo mais capaz disponível sem créditos pagos. Foco: autorização nas Server Actions, RLS, cache de dados de usuário e a Review Focus. Uma passada de correção, com teste que falha antes.
 
 - [ ] **Step 2: [AUTOR] Aprovar o merge**
 
