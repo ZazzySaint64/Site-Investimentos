@@ -154,6 +154,9 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended(v_user::text || v_asset::text, 0));
   delete from public.transactions where id = p_id and user_id = v_user;
+  if not found then
+    raise exception 'Lançamento não encontrado.' using errcode = 'P0001';
+  end if;
   perform private.check_position(v_user, v_asset);
 end;
 $$;

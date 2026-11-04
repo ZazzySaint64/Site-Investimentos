@@ -36,7 +36,7 @@ class Rest:
         return self.request("DELETE", path, key, token)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def rest():
     url = os.environ.get("SUPABASE_URL")
     secret = os.environ.get("SUPABASE_SECRET_KEY")
@@ -46,10 +46,21 @@ def rest():
     return Rest(url, {"secret": secret, "publishable": publishable})
 
 
-@pytest.fixture
+SANDBOX_TICKER = "ZZTESTE3"
+
+
+def _remove_sandbox_asset(rest):
+    found = rest.get(f"/assets?select=id&ticker=eq.{SANDBOX_TICKER}", key="secret").json()
+    for row in found:
+        for table in ("splits", "transactions"):
+            rest.delete(f"/{table}?asset_id=eq.{row['id']}", key="secret").raise_for_status()
+        rest.delete(f"/assets?id=eq.{row['id']}", key="secret").raise_for_status()
+
+
+@pytest.fixture(scope="module")
 def sandbox_asset(rest):
     asset = {
-        "ticker": "ZZTESTE3",
+        "ticker": SANDBOX_TICKER,
         "name": "Teste",
         "class": "acao_br",
         "currency": "BRL",
@@ -57,25 +68,35 @@ def sandbox_asset(rest):
         "ml_enabled": False,
         "active": False,
     }
-    rest.post("/assets?on_conflict=ticker", json=asset, key="secret").raise_for_status()
-    asset_id = rest.get("/assets?select=id&ticker=eq.ZZTESTE3", key="secret").json()[0]["id"]
-    split = {"asset_id": asset_id, "date": "2024-06-01", "ratio": 2}
-    rest.post("/splits", json=split, key="secret").raise_for_status()
-    yield
-    rest.delete(f"/splits?asset_id=eq.{asset_id}", key="secret")
-    rest.delete(f"/transactions?asset_id=eq.{asset_id}", key="secret")
-    rest.delete(f"/assets?id=eq.{asset_id}", key="secret")
+    _remove_sandbox_asset(rest)
+    try:
+        rest.post("/assets", json=asset, key="secret").raise_for_status()
+        found = rest.get(f"/assets?select=id&ticker=eq.{SANDBOX_TICKER}", key="secret").json()
+        split = {"asset_id": found[0]["id"], "date": "2024-06-01", "ratio": 2}
+        rest.post("/splits", json=split, key="secret").raise_for_status()
+        yield
+    finally:
+        _remove_sandbox_asset(rest)
 
 
-@pytest.fixture
+class Tokens(dict):
+    """Access tokens by name; `ids` holds the matching user ids."""
+
+    def __init__(self):
+        super().__init__()
+        self.ids = {}
+
+
+@pytest.fixture(scope="module")
 def users(rest, sandbox_asset):
-    created = {}
-    tokens = {}
-    for name in ("a", "b"):
-        email = f"rls-{uuid.uuid4()}@example.com"
-        password = secrets.token_urlsafe(24)
-        created[name] = auth_admin.create_user(email, password)
-        tokens[name] = auth_admin.sign_in(email, password)
-    yield tokens
-    for user_id in created.values():
-        auth_admin.delete_user(user_id)
+    tokens = Tokens()
+    try:
+        for name in ("a", "b"):
+            email = f"rls-{uuid.uuid4()}@example.com"
+            password = secrets.token_urlsafe(24)
+            tokens.ids[name] = auth_admin.create_user(email, password)
+            tokens[name] = auth_admin.sign_in(email, password)
+        yield tokens
+    finally:
+        for user_id in tokens.ids.values():
+            auth_admin.delete_user(user_id)

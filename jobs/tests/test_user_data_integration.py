@@ -58,6 +58,15 @@ def transaction_count(rest, token):
     return len(rest.get("/transactions?select=id", key="publishable", token=token).json())
 
 
+@pytest.fixture(autouse=True)
+def clean_user_rows(rest, users):
+    yield
+    for user_id in users.ids.values():
+        for table in ("transactions", "fixed_income", "profiles"):
+            response = rest.delete(f"/{table}?user_id=eq.{user_id}", key="secret")
+            response.raise_for_status()
+
+
 def days_from_today(days):
     return (date.today() + timedelta(days=days)).isoformat()
 
@@ -77,21 +86,46 @@ def test_other_user_cannot_delete_a_transaction(rest, users):
 
 def test_tables_refuse_direct_writes(rest, users):
     token = users["a"]
+    user_id = user_id_of(token)
     row_id = add(rest, token, "ZZTESTE3", "buy", 10, 5, "2024-01-01").json()
-    row = {"user_id": user_id_of(token), "asset_id": 1, "type": "buy", "quantity": 1, "price": 1}
-    for table in ("transactions", "fixed_income"):
+    asset_id = rest.get("/assets?select=id&ticker=eq.ZZTESTE3", key="secret").json()[0]["id"]
+    payloads = {
+        "transactions": (
+            {
+                "user_id": user_id,
+                "asset_id": asset_id,
+                "type": "buy",
+                "quantity": 1,
+                "price": 1,
+                "date": "2024-01-01",
+            },
+            {"price": 1},
+        ),
+        "fixed_income": (
+            {
+                "user_id": user_id,
+                "name": "x",
+                "principal": 1,
+                "cdi_pct": 1,
+                "start_date": "2024-01-01",
+                "daily_liquidity": True,
+            },
+            {"name": "x"},
+        ),
+    }
+    for table, (row, patch_body) in payloads.items():
         post = rest.post(f"/{table}", json=row, key="publishable", token=token)
         patch = rest.patch(
-            f"/{table}?id=eq.{row_id}", json={"price": 1}, key="publishable", token=token
+            f"/{table}?id=eq.{row_id}", json=patch_body, key="publishable", token=token
         )
         delete = rest.delete(f"/{table}?id=eq.{row_id}", key="publishable", token=token)
-        assert post.status_code in DENIED
-        assert patch.status_code in DENIED
-        assert delete.status_code in DENIED
+        assert post.status_code in DENIED, table
+        assert patch.status_code in DENIED, table
+        assert delete.status_code in DENIED, table
     assert transaction_count(rest, token) == 1
 
 
-def test_anonymous_gets_nothing(rest, users):
+def test_anonymous_gets_nothing(rest):
     for table in ("profiles", "transactions", "fixed_income"):
         assert rest.get(f"/{table}?select=*", key="publishable").status_code in DENIED
     assert add(rest, None, "ZZTESTE3", "buy", 10, 5, "2024-01-01").status_code in DENIED
