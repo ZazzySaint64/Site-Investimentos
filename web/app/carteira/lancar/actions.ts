@@ -36,7 +36,7 @@ export async function addTransactionAction(_state: FormState, formData: FormData
     type: values.type === "sell" ? "sell" : "buy",
     quantity: Number(values.quantity),
     price: Number(values.price),
-    date: values.date,
+    date: values.date === "" ? null : values.date,
   });
   return finish(result, values);
 }
@@ -49,7 +49,7 @@ export async function addFixedIncomeAction(_state: FormState, formData: FormData
     name: values.name.trim(),
     principal: Number(values.principal),
     cdi_pct: Number(values.cdi_pct),
-    start_date: values.start_date,
+    start_date: values.start_date === "" ? null : values.start_date,
     maturity: values.maturity === "" ? null : values.maturity,
     daily_liquidity: daily,
   });

@@ -40,14 +40,14 @@ export type TransactionInput = {
   type: "buy" | "sell";
   quantity: number;
   price: number;
-  date: string;
+  date: string | null;
 };
 
 export type FixedIncomeInput = {
   name: string;
   principal: number;
   cdi_pct: number;
-  start_date: string;
+  start_date: string | null;
   maturity: string | null;
   daily_liquidity: boolean;
 };

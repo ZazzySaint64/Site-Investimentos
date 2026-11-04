@@ -39,6 +39,8 @@ export async function launch(page: Page, input: LaunchInput): Promise<void> {
     page.waitForResponse(isAction),
     page.getByRole("button", { name: "Salvar lançamento" }).click(),
   ]);
+  // pending ends in the same commit that resets the form
+  await expect(page.getByRole("button", { name: "Salvar lançamento" })).toBeEnabled();
 }
 
 /** Newest first, because a purchase cannot be deleted while a later sale needs it. */

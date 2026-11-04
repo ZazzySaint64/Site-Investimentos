@@ -20,6 +20,26 @@ test("a purchase is saved, an impossible sale shows the rule, and deleting clear
   await expect(row).toHaveCount(0);
 });
 
+test("an empty date shows the rule, not a generic error", async ({ page }) => {
+  skipWithoutUsers();
+  await signIn(page, "A");
+  await page.goto("/carteira/lancar");
+
+  const sale = page.getByRole("form", { name: "Compra e venda" });
+  await sale.getByLabel("Ativo", { exact: true }).fill("ITUB4");
+  await sale.getByLabel("Quantidade", { exact: true }).fill("10");
+  await sale.getByLabel("Preço por unidade", { exact: true }).fill("30");
+  await sale.getByRole("button", { name: "Salvar lançamento" }).click();
+  await expect(sale.getByRole("alert")).toContainText("Informe uma data que não esteja no futuro.");
+
+  const fixed = page.getByRole("form", { name: "Renda fixa" });
+  await fixed.getByLabel("Nome", { exact: true }).fill("CDB sem data");
+  await fixed.getByLabel("Valor aplicado", { exact: true }).fill("1000");
+  await fixed.getByLabel("Percentual do CDI", { exact: true }).fill("100");
+  await fixed.getByRole("button", { name: "Salvar renda fixa" }).click();
+  await expect(fixed.getByRole("alert")).toContainText("Informe uma data de início que não esteja no futuro.");
+});
+
 test("fixed income is saved and can be deleted", async ({ page }) => {
   skipWithoutUsers();
   await signIn(page, "A");
@@ -32,6 +52,7 @@ test("fixed income is saved and can be deleted", async ({ page }) => {
   await page.getByLabel("Data de início", { exact: true }).fill("2024-01-02");
   await page.getByLabel("Liquidez diária", { exact: true }).check();
   await page.getByRole("button", { name: "Salvar renda fixa" }).click();
+  await expect(page.getByRole("button", { name: "Salvar renda fixa" })).toBeEnabled();
   await expect(row).toBeVisible();
 
   await row.getByRole("button", { name: "Apagar" }).click();
@@ -64,6 +85,7 @@ test("fixed income appears without a link to an asset page", async ({ page }) =>
     await page.getByLabel("Data de início", { exact: true }).fill("2024-01-02");
     await page.getByLabel("Liquidez diária", { exact: true }).check();
     await page.getByRole("button", { name: "Salvar renda fixa" }).click();
+    await expect(page.getByRole("button", { name: "Salvar renda fixa" })).toBeEnabled();
     await page.getByRole("link", { name: "Ver minha carteira" }).click();
     await expect(page.getByRole("main").getByText("CDB de teste")).toBeVisible();
     await expect(page.getByRole("link", { name: "CDB de teste" })).toHaveCount(0);
