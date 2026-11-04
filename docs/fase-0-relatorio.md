@@ -7,7 +7,7 @@ Validações feitas em 2026-11-03.
 | `yfinance` | Aprovado |
 | Tesouro Transparente | Aprovado |
 | API SGS do Banco Central | Aprovado |
-| Supabase | Aprovado; projeto criado em `us-east-1`; falta a senha em `DATABASE_URL` |
+| Supabase | Aprovado; projeto criado em `us-east-1` |
 | Vercel | Aprovado |
 | Groq | Aprovado com `openai/gpt-oss-120b`; `llama-3.3-70b-versatile` não existe mais para esta conta |
 
@@ -58,8 +58,6 @@ O tempo de resposta varia: uma janela de 9 anos passou de 20 s em um teste anter
 Projeto `site-investimentos` criado e saudável, com Postgres 17. A chave secreta respondeu HTTP 200 na API REST e a chave publicável, HTTP 200 na API de autenticação.
 
 **Região:** o projeto ficou em `us-east-1`, não em `sa-east-1` como o plano pedia. A spec não fixa região. As funções da Vercel rodam por [padrão em `iad1`](https://vercel.com/docs/functions/configuring-functions/region), Washington, perto de `us-east-1`, então a rota do chat fica perto do banco. Quem está no Brasil espera mais nas leituras diretas do navegador ao banco. Trocar de região exige criar outro projeto, o que hoje não custa nada, porque o banco está vazio.
-
-**Pendência:** `DATABASE_URL` ainda tem o marcador de senha. A Tarefa 5 precisa da senha real para aplicar a migration.
 
 Plano gratuito, segundo a [página de preços](https://supabase.com/pricing):
 
@@ -114,3 +112,26 @@ Plano Hobby, segundo a [documentação](https://vercel.com/docs/plans/hobby):
 - A documentação não deixa claro se a tabela vale para o plano gratuito. Os headers desta conta coincidem com ela, mas os 200.000 tokens por dia dependem de confirmação no painel.
 
 **Retenção zero:** a [documentação](https://console.groq.com/docs/your-data) diz que todos os clientes podem ativá-la em Data Controls. Sem ela, entradas e saídas podem ficar até 30 dias em registros de diagnóstico. A página não diz se os dados são usados para treinamento. Confirmação da ativação nesta conta: pendente do autor.
+
+## Fase 1
+
+Carga completa disparada pelo autor no GitHub Actions em 2026-11-03: concluída em 124 s, com estado `partial`. Os únicos avisos são 3 cotações erradas de `XPML11`, de 14 a 16/01/2026, rejeitadas como esperado.
+
+| Medida | Valor |
+|---|---:|
+| Ativos em uso | 159 (70 ações, 30 FIIs, 58 títulos do Tesouro, `^BVSP`) |
+| Preços | 279.049 linhas |
+| Retornos mensais | 13.312 linhas |
+| Setores com estatística | 24 |
+| Tamanho do banco | 61 MB, dos quais 48 MB são `prices` |
+
+**Tamanho:** o banco já passou dos 50 MB estimados, mesmo só com o Brasil. O limite do plano gratuito é 500 MB, então ainda há folga. Vale medir de novo ao incluir EUA e cripto.
+
+**Problemas encontrados nos dados reais:**
+
+- `NATU3`: Yahoo mantém o preço parado em 36,86 de dezembro de 2019 a julho de 2025. Trocado por `AZZA3`, o próximo maior peso do Ibovespa.
+- `UGPA3`: Yahoo muda de escala em 28/06/2021 (de 8,75 para 19,19). O histórico começa nessa data, por `jobs/catalog/history_starts.csv`.
+- `XPML11`: cotações ruins em janeiro de 2026 criaram um fator de ajuste falso. `repair_adjusted_close` remove esse degrau.
+- `MGLU3`: queda de 58% em 26/10/2026, com volume alto e sem desdobramento informado. Liberada em `jobs/catalog/released_prices.csv`, mas não confirmada em outra fonte.
+
+**Pendente:** confirmar a primeira execução agendada de `nightly`, às 02:30 UTC. Essa é a condição de pronto da fase 1.

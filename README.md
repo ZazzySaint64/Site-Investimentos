@@ -6,7 +6,7 @@ Um site que trabalha com dados de investimentos, focado em pessoas leigas: carte
 
 ## Estado atual
 
-O job de dados está pronto. O site ainda não existe: ele vem nas próximas fases.
+O job de dados está pronto. O site já tem tela inicial, lista de ativos com busca, página de cada ativo com explicações e glossário. Carteira, simulador e assistente vêm nas próximas fases.
 
 Todas as noites, às 02:30 UTC, o job no GitHub Actions atualiza preços, séries macro, Tesouro Direto e estatísticas no Supabase. O site só vai ler do banco, nunca das fontes externas.
 
@@ -19,6 +19,20 @@ Todas as noites, às 02:30 UTC, o job no GitHub Actions atualiza preços, série
 | [Tesouro Transparente](https://www.tesourotransparente.gov.br/) | Preços do Tesouro Direto |
 
 Os catálogos de ações e fundos seguem as maiores participações do Ibovespa e do IFIX publicadas pela B3.
+
+## Abrir o site localmente
+
+É preciso Node.js 24. Copie `web/.env.example` para `web/.env.local` e preencha com a URL do projeto Supabase e a chave publicável.
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Abra `http://localhost:3000`. Testes: `npm test`.
+
+No Windows, basta dar dois cliques em `abrir-site.bat`, na raiz do repositório. Ele instala as dependências na primeira vez, inicia o site e abre o navegador.
 
 ## Rodar os jobs localmente
 
