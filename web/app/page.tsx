@@ -24,10 +24,10 @@ const READY = [
   "Estatísticas de cada ativo com explicação",
   "Comparação de cada ativo com o CDI",
   "Glossário dos termos usados",
+  "Sua própria carteira, com login",
 ];
 
 const COMING = [
-  "Sua própria carteira, com login",
   "Simulações do futuro, sempre como faixa de possibilidades",
   "Assistente de IA que só afirma o que os dados mostram",
 ];
@@ -62,6 +62,12 @@ export default function Home() {
             className="rounded-md border border-border px-4 py-2.5 text-sm hover:text-accent"
           >
             Explorar ativos
+          </Link>
+          <Link
+            href="/entrar"
+            className="rounded-md border border-border px-4 py-2.5 text-sm hover:text-accent"
+          >
+            Criar minha carteira
           </Link>
         </div>
         <Suspense fallback={null}>

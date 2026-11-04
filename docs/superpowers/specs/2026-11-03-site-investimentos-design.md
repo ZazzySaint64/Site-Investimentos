@@ -349,7 +349,7 @@ Números em fonte monoespaçada; texto em fonte do sistema. As faixas de previs�
 
 ## 11. Segurança
 
-- A chave secreta do Supabase só existe nos secrets do GitHub e na rota de apagar conta. A chave da Groq só existe no servidor.
+- A chave secreta do Supabase só existe nos secrets do GitHub. Apagar a conta usa a função SQL `delete_my_account`, que age só sobre o usuário da sessão. A chave da Groq só existe no servidor.
 - Tabelas públicas são somente leitura para `anon` e `authenticated`.
 - Dados do usuário: RLS em todas as tabelas.
 - A rota do chat valida entrada por esquema e limita o tamanho das mensagens.

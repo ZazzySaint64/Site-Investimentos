@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { deleteEverything, launch, signIn, skipWithoutUsers } from "./session";
+import { deleteEverything, launch, signIn, signOut, skipWithoutUsers } from "./session";
 
 test.describe.configure({ mode: "serial" });
 
@@ -136,4 +136,72 @@ test("the asset page shows the position only to whoever holds it", async ({ page
     await context.close();
     await deleteEverything(page);
   }
+});
+
+test("the next person in the same browser sees nothing from the previous one", async ({ page }) => {
+  skipWithoutUsers();
+  await signIn(page, "A");
+  try {
+    await page.goto("/carteira/lancar");
+    await launch(page, { asset: "ITUB4", operation: "Compra", quantity: "10", price: "30", date: "2024-03-15" });
+    await page.goto("/carteira");
+    await expect(page.getByRole("main").getByRole("link", { name: /Itaú/ })).toBeVisible();
+
+    await signOut(page);
+    await signIn(page, "B");
+    await deleteEverything(page); // B starts empty; A's data must still not appear
+    await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Minha carteira" }).click();
+    const main = page.getByRole("main");
+    await expect(main.getByText("Sua carteira está vazia.")).toBeVisible();
+    await expect(main.getByRole("link", { name: /Itaú/ })).toHaveCount(0);
+    await page.goto("/dados/ITUB4");
+    await expect(page.getByRole("main").getByRole("heading", { name: "Sua posição" })).toHaveCount(0);
+  } finally {
+    await signOut(page);
+    await signIn(page, "A");
+    await deleteEverything(page);
+  }
+});
+
+test("two people at the same time get their own wallets", async ({ browser }) => {
+  skipWithoutUsers();
+  const contextA = await browser.newContext({ baseURL: "http://localhost:3000" });
+  const contextB = await browser.newContext({ baseURL: "http://localhost:3000" });
+  const pageA = await contextA.newPage();
+  const pageB = await contextB.newPage();
+  try {
+    await signIn(pageA, "A");
+    await signIn(pageB, "B");
+    await pageA.goto("/carteira/lancar");
+    await launch(pageA, { asset: "ITUB4", operation: "Compra", quantity: "10", price: "30", date: "2024-03-15" });
+    await pageB.goto("/carteira/lancar");
+    await launch(pageB, { asset: "PETR4", operation: "Compra", quantity: "5", price: "35", date: "2024-03-15" });
+
+    for (let round = 0; round < 3; round++) {
+      await pageA.goto("/carteira");
+      await expect(pageA.getByRole("main").getByRole("link", { name: /Itaú/ })).toBeVisible();
+      await expect(pageA.getByRole("main").getByRole("link", { name: /Petrobras/ })).toHaveCount(0);
+      await pageB.goto("/carteira");
+      await expect(pageB.getByRole("main").getByRole("link", { name: /Petrobras/ })).toBeVisible();
+      await expect(pageB.getByRole("main").getByRole("link", { name: /Itaú/ })).toHaveCount(0);
+    }
+  } finally {
+    await deleteEverything(pageA).catch(() => {});
+    await deleteEverything(pageB).catch(() => {});
+    await contextA.close();
+    await contextB.close();
+  }
+});
+
+test("the user pages fit a phone", async ({ page }) => {
+  skipWithoutUsers();
+  await page.setViewportSize({ width: 375, height: 812 });
+  const fits = async (path: string) => {
+    await page.goto(path);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    expect(overflow, `${path} overflows 375 px`).toBe(false);
+  };
+  await fits("/entrar"); // before signing in: a session redirects it to /carteira
+  await signIn(page, "A");
+  for (const path of ["/carteira", "/carteira/lancar", "/questionario", "/conta"]) await fits(path);
 });

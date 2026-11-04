@@ -18,6 +18,12 @@ export async function signIn(page: Page, who: "A" | "B"): Promise<void> {
   await page.waitForURL(/\/carteira/);
 }
 
+export async function signOut(page: Page): Promise<void> {
+  await page.goto("/conta");
+  await page.getByRole("button", { name: "Sair" }).click();
+  await page.waitForURL((url) => url.pathname === "/");
+}
+
 export type LaunchInput = {
   asset: string;
   operation: "Compra" | "Venda";
