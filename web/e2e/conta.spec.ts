@@ -30,3 +30,30 @@ test("a broken email link explains what happened", async ({ page }) => {
   await page.goto("/auth/callback?code=invalido");
   await expect(page.getByText("Não foi possível concluir pelo link")).toBeVisible();
 });
+
+test("questionnaire refuses a target that does not add up and saves a fixed one", async ({ page }) => {
+  skipWithoutUsers();
+  await signIn(page, "A");
+  await page.goto("/questionario");
+  const form = page.getByRole("form", { name: "Questionário de perfil" });
+  for (const fieldset of await form.locator("fieldset").all()) await fieldset.getByRole("radio").nth(1).check();
+  await expect(page.getByRole("heading", { name: "Seu perfil: Moderado" })).toBeVisible();
+  const save = form.getByRole("button", { name: "Salvar meu perfil" });
+  await expect(save).toBeEnabled();
+
+  const cripto = form.getByLabel("Cripto (%)");
+  await cripto.fill("6");
+  await expect(form.getByText("Soma: 101%")).toBeVisible();
+  await expect(save).toBeDisabled();
+
+  await cripto.fill("5");
+  await form.getByLabel("Renda fixa (%)").fill("41");
+  await form.getByLabel("Ações do Brasil (%)").fill("29");
+  await expect(save).toBeEnabled();
+  await save.click();
+  await page.waitForURL(/\/carteira/);
+
+  await page.goto("/questionario");
+  await expect(page.getByLabel("Renda fixa (%)")).toHaveValue("41");
+  await expect(page.getByLabel("Ações do Brasil (%)")).toHaveValue("29");
+});
