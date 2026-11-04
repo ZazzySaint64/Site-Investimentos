@@ -2,13 +2,15 @@
 
 Um site que trabalha com dados de investimentos, focado em pessoas leigas: carteira, estatísticas, previsões e uma IA que explica os números.
 
+**Site no ar:** https://site-investimentos-gray.vercel.app
+
 > **Projeto educativo e não comercial.** Nada aqui é recomendação de investimento. Rentabilidade passada não garante resultado futuro.
 
 ## Estado atual
 
 O job de dados está pronto. O site já tem tela inicial, carteira de exemplo sem login, lista de ativos com busca, página de cada ativo com explicações e glossário. Carteira própria, simulador e assistente vêm nas próximas fases.
 
-Todas as noites, às 02:30 UTC, o job no GitHub Actions atualiza preços, séries macro, Tesouro Direto e estatísticas no Supabase. O site só vai ler do banco, nunca das fontes externas.
+Todas as noites, às 02:30 UTC, o job no GitHub Actions atualiza preços, séries macro, Tesouro Direto e estatísticas no Supabase. O GitHub pode atrasar esse horário em algumas horas. O site só lê do banco, nunca das fontes externas.
 
 ## Fontes de dados
 
@@ -66,4 +68,5 @@ Um preço com variação acima de 50% sem desdobramento é rejeitado e registrad
 
 - [Spec](docs/superpowers/specs/2026-11-03-site-investimentos-design.md)
 - [Plano das fases 0 e 1](docs/superpowers/plans/2026-11-03-fase-0-1-validacao-e-dados.md)
+- [Plano da fase 2](docs/superpowers/plans/2026-11-03-fase-2-demo.md)
 - [Relatório da fase 0](docs/fase-0-relatorio.md)

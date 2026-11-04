@@ -134,4 +134,28 @@ Carga completa disparada pelo autor no GitHub Actions em 2026-11-03: concluída 
 - `XPML11`: cotações ruins em janeiro de 2026 criaram um fator de ajuste falso. `repair_adjusted_close` remove esse degrau.
 - `MGLU3`: queda de 58% em 26/10/2026, com volume alto e sem desdobramento informado. Liberada em `jobs/catalog/released_prices.csv`, mas não confirmada em outra fonte.
 
-**Pendente:** confirmar a primeira execução agendada de `nightly`, às 02:30 UTC. Essa é a condição de pronto da fase 1.
+**Execução agendada:** a primeira execução automática de `nightly` foi criada às 09:39 UTC de 2026-11-04, cerca de 7 horas depois do horário marcado de 02:30 UTC, e terminou com sucesso. A fase 1 está pronta.
+
+## Fase 2
+
+Publicada em https://site-investimentos-gray.vercel.app em 2026-11-04, a partir de `main`, no plano Hobby da Vercel.
+
+Tempos medidos de um computador no Brasil. A função roda em `iad1`, na mesma região do banco.
+
+| Medida | Valor |
+|---|---:|
+| Carga de `/` no navegador | 0,5 s |
+| Carga de `/dados` no navegador | 0,65 s |
+| Carga de `/` logo depois de um deploy | 3,1 a 4,4 s |
+| Primeira visita a `/dados/PETR4`, por `curl` | 2,5 s |
+| Visitas seguintes às páginas com dados, por `curl` | 0,5 a 0,7 s |
+| Tamanho do banco | 61 MB |
+| Preços | 279.047 linhas |
+
+Foram poucas medições, então os valores servem como ordem de grandeza.
+
+**Conferido na URL pública, em navegador novo e sem login:** chegada à carteira de exemplo em um clique, troca de pessoa, abertura de um ativo, data dos dados e largura de 375 px em seis páginas, sem rolagem horizontal. O celular foi simulado no Chromium.
+
+**Erro na publicação:** o primeiro deploy falhou com `Next.js encountered uncached or runtime data during prerendering`. A causa provável foi um valor errado nas variáveis da Vercel: no commit que falhou, `SUPABASE_URL` inexistente ou com espaço no final reproduz o mesmo erro em `/`. O valor exato não foi confirmado. O site passou a funcionar depois que as variáveis foram corrigidas.
+
+A primeira correção, com `Suspense` em `/` e `instant = false` em `/dados`, deixou o build passar e escondeu o problema, porque as telas com dados continuaram em erro. Ela foi mantida para que a tela inicial abra com o banco fora. O custo é que uma variável errada não impede mais o deploy, então é preciso conferir a URL pública depois de mudar uma variável.
