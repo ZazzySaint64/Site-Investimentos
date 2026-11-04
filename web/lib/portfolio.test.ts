@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { computePortfolio, hasLaterSplit, type DemoTransaction } from "./portfolio.ts";
+import { fixedIncomePositions } from "./fixed-income.ts";
+import { computePortfolio, hasLaterSplit, type Transaction } from "./portfolio.ts";
 
 type Options = {
   close?: number | null;
@@ -18,7 +19,7 @@ function transaction(
   price: number,
   date: string,
   { close = 100, splits = [], active = true, assetClass = "acao_br" }: Options = {},
-): DemoTransaction {
+): Transaction {
   return {
     id: nextId++,
     type,
@@ -208,4 +209,38 @@ test("hasLaterSplit tells when the quantity changed after the operation", () => 
   assert.equal(hasLaterSplit(buy("A", 10, 100, "2024-01-01", { splits })), true);
   assert.equal(hasLaterSplit(buy("A", 10, 100, "2024-06-01", { splits })), false);
   assert.equal(hasLaterSplit(buy("A", 10, 100, "2024-01-01")), false);
+});
+
+const cdb = { id: 1, name: "CDB", principal: 1000, cdi_pct: 100, start_date: "2024-01-01", maturity: null, daily_liquidity: true };
+const cdi = [
+  { date: "2024-01-01", value: 0.05 },
+  { date: "2024-01-02", value: 0.05 },
+  { date: "2024-01-03", value: 0.05 },
+  { date: "2024-01-04", value: 0.05 },
+];
+const near = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-6, `${a} != ${b}`);
+
+test("fixed income joins totals, allocation and shares", () => {
+  const [extra] = fixedIncomePositions([cdb], [], "2024-01-03");
+  const p = computePortfolio([buy("A", 10, 100, "2024-01-01", { close: 100 })], [extra]);
+  assert.equal(p.value, 2000);
+  assert.equal(p.invested, 2000);
+  assert.equal(p.positions.find((x) => x.assetClass === "renda_fixa")?.share, 0.5);
+  assert.deepEqual(p.allocation.map((x) => x.share), [0.5, 0.5]);
+});
+
+test("only fixed income works and result share uses the principal", () => {
+  const [extra] = fixedIncomePositions([cdb], cdi, "2024-01-03");
+  const p = computePortfolio([], [extra]);
+  near(p.result, 1000 * 1.0005 ** 2 - 1000);
+  near(p.resultShare, 1.0005 ** 2 - 1);
+});
+
+test("fractional split residue does not leave a ghost position", () => {
+  // buy 10, ratio 1/3, then sell 3.333333: less than 1e-6 is left
+  const p = computePortfolio([
+    buy("A", 10, 100, "2024-01-01", { close: 100, splits: [{ date: "2024-06-01", ratio: 1 / 3 }] }),
+    sell("A", 3.333333, 300, "2024-07-01", { close: 100, splits: [{ date: "2024-06-01", ratio: 1 / 3 }] }),
+  ]);
+  assert.equal(p.positions.length, 0);
 });

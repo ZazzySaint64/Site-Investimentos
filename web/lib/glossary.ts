@@ -73,6 +73,18 @@ export const GLOSSARY = {
     title: "Desdobramento e grupamento",
     text: "A empresa muda o número de ações sem mudar o valor total. No desdobramento, cada ação vira várias e o preço cai na mesma proporção. No grupamento, ocorre o contrário.",
   },
+  renda_fixa: {
+    title: "Renda fixa",
+    text: "Investimento em que as regras de rendimento são combinadas na hora da compra, como um CDB que rende um percentual do CDI. O valor mostrado aqui é uma estimativa e não conta impostos.",
+  },
+  liquidez_diaria: {
+    title: "Liquidez diária",
+    text: "Possibilidade de resgatar o dinheiro em qualquer dia útil, sem esperar o vencimento.",
+  },
+  perfil_risco: {
+    title: "Perfil de risco",
+    text: "Quanto você aceita ver o valor oscilar para tentar render mais. Serve para comparar a sua carteira com uma divisão de referência, sem dizer o que comprar.",
+  },
   pregao: {
     title: "Pregão",
     text: "Cada dia em que a bolsa funciona. Fins de semana e feriados não contam.",

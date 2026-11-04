@@ -1,6 +1,6 @@
 // Reads from Supabase with the publishable key. The site never calls the external data sources.
 
-import type { DemoTransaction } from "./portfolio.ts";
+import type { Transaction } from "./portfolio.ts";
 
 const PAGE_SIZE = 1000;
 const TIMEOUT_MS = 8000;
@@ -120,7 +120,7 @@ const DEMO_COLUMNS =
   "id,type,quantity,price,date,demo_personas!inner(slug)," +
   "asset:assets(ticker,name,class,sector,active,prices(close,date),splits(date,ratio))";
 
-export function getDemoTransactions(slug: string): Promise<DemoTransaction[]> {
+export function getDemoTransactions(slug: string): Promise<Transaction[]> {
   const filter = `demo_personas.slug=eq.${encodeURIComponent(slug)}`;
   const latestPrice = "asset.prices.order=date.desc&asset.prices.limit=1";
   return get(`/demo_transactions?select=${DEMO_COLUMNS}&${filter}&${latestPrice}&order=date,id`);
@@ -143,4 +143,10 @@ export async function getMacroSummary() {
     latestMacro("ipca", 12),
   ]);
   return { selic: selic[0], cdi: cdi[0], ipca };
+}
+
+export type HoldableAsset = { ticker: string; name: string; class: string };
+
+export function getHoldableAssets(): Promise<HoldableAsset[]> {
+  return get("/assets?select=ticker,name,class&holdable=eq.true&active=eq.true&order=name");
 }

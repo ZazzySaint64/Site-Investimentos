@@ -1,6 +1,6 @@
 // Portfolio figures from the transactions. The position is never saved, only calculated.
 
-export type DemoTransaction = {
+export type Transaction = {
   id: number;
   type: "buy" | "sell";
   quantity: number;
@@ -31,6 +31,7 @@ export type Position = {
   value: number | null;
   result: number | null;
   share: number | null;
+  maturity: string | null; // null for stock-exchange assets
 };
 
 export type Portfolio = {
@@ -44,28 +45,28 @@ export type Portfolio = {
   missingPrices: string[];
 };
 
-const EMPTY_QUANTITY = 1e-9;
+const EMPTY_QUANTITY = 1e-6;
 
-function laterSplitFactor(transaction: DemoTransaction): number {
+function laterSplitFactor(transaction: Transaction): number {
   return transaction.asset.splits
     .filter((split) => split.date > transaction.date)
     .reduce((factor, split) => factor * split.ratio, 1);
 }
 
-export function hasLaterSplit(transaction: DemoTransaction): boolean {
+export function hasLaterSplit(transaction: Transaction): boolean {
   return transaction.asset.splits.some((split) => split.date > transaction.date);
 }
 
-function chronological(a: DemoTransaction, b: DemoTransaction): number {
+function chronological(a: Transaction, b: Transaction): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   if (a.type !== b.type) return a.type === "buy" ? -1 : 1;
   return a.id - b.id;
 }
 
-export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
+export function computePortfolio(transactions: Transaction[], extras: Position[] = []): Portfolio {
   const holdings = new Map<
     string,
-    { asset: DemoTransaction["asset"]; quantity: number; cost: number; bought: number }
+    { asset: Transaction["asset"]; quantity: number; cost: number; bought: number }
   >();
   let realized = 0;
 
@@ -94,16 +95,19 @@ export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
 
   const held = [...holdings.values()].filter((holding) => holding.quantity > EMPTY_QUANTITY);
   // A position without a price has no result yet, so its cost stays out of the comparisons too.
-  const bought = [...holdings.values()]
-    .filter((holding) => holding.asset.prices[0] || holding.quantity <= EMPTY_QUANTITY)
-    .reduce((total, holding) => total + holding.bought, 0);
-  const value = held.reduce(
-    (total, { asset, quantity }) => total + (asset.prices[0] ? quantity * asset.prices[0].close : 0),
-    0,
-  );
+  const bought =
+    [...holdings.values()]
+      .filter((holding) => holding.asset.prices[0] || holding.quantity <= EMPTY_QUANTITY)
+      .reduce((total, holding) => total + holding.bought, 0) +
+    extras.reduce((total, extra) => total + extra.cost, 0);
+  const value =
+    held.reduce(
+      (total, { asset, quantity }) => total + (asset.prices[0] ? quantity * asset.prices[0].close : 0),
+      0,
+    ) + extras.reduce((total, extra) => total + (extra.value ?? 0), 0);
 
   const positions: Position[] = held
-    .map(({ asset, quantity, cost }) => {
+    .map(({ asset, quantity, cost }): Position => {
       const latest = asset.prices[0] ?? null;
       const positionValue = latest ? quantity * latest.close : null;
       return {
@@ -119,9 +123,15 @@ export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
         priceDate: latest?.date ?? null,
         value: positionValue,
         result: positionValue === null ? null : positionValue - cost,
-        share: positionValue === null || value === 0 ? null : positionValue / value,
+        share: null as number | null, // set below, over the total with extras
+        maturity: null as string | null,
       };
     })
+    .concat(extras)
+    .map((position) => ({
+      ...position,
+      share: position.value === null || value === 0 ? null : position.value / value,
+    }))
     .sort((a, b) => (b.value ?? -1) - (a.value ?? -1));
 
   const byClass = new Map<string, number>();

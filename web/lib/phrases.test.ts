@@ -9,6 +9,7 @@ import {
   formatPercent,
   formatSignedPercent,
   returnPhrase,
+  todayInBrazil,
   sharpePhrase,
   statusLabel,
   volatilityPhrase,
@@ -85,4 +86,9 @@ test("year ticks are empty for less than three years of data", () => {
 test("return phrase does not claim five years when the history is shorter", () => {
   assert.doesNotMatch(returnPhrase(0.2), /últimos 5 anos/);
   assert.match(returnPhrase(0.2), /até 5 anos/);
+});
+
+test("today follows the Brazilian clock", () => {
+  assert.equal(todayInBrazil(Date.parse("2026-11-05T02:00:00Z")), "2026-11-04");
+  assert.equal(todayInBrazil(Date.parse("2026-11-05T03:00:00Z")), "2026-11-05");
 });

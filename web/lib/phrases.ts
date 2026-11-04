@@ -73,6 +73,7 @@ export const CLASS_LABELS: Record<string, string> = {
   fii: "Fundo imobiliário",
   tesouro: "Tesouro Direto",
   indice: "Índice",
+  renda_fixa: "Renda fixa",
 };
 
 export function formatSignedMoney(value: number | null): string {
@@ -209,4 +210,9 @@ export function statusLabel(status: string): string {
 
 export function annualizedFromDaily(dailyPercent: number): number {
   return (1 + dailyPercent / 100) ** 252 - 1;
+}
+
+/** Today's date, AAAA-MM-DD, on the Brazilian clock. */
+export function todayInBrazil(nowMs = Date.now()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(nowMs);
 }
