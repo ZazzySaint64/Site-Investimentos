@@ -9,6 +9,7 @@ export async function proxy(request: NextRequest) {
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_PUBLISHABLE_KEY!,
       {
+        cookieOptions: { httpOnly: true, secure: process.env.NODE_ENV === "production" },
         cookies: {
           getAll: () => request.cookies.getAll(),
           setAll(cookiesToSet, headers) {

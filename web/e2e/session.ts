@@ -1,6 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const REQUIRED = ["E2E_EMAIL_A", "E2E_PASSWORD_A", "E2E_EMAIL_B", "E2E_PASSWORD_B"];
+const REQUIRED = [
+  "E2E_EMAIL_A",
+  "E2E_PASSWORD_A",
+  "E2E_EMAIL_B",
+  "E2E_PASSWORD_B",
+  "E2E_EMAIL_C",
+  "E2E_PASSWORD_C",
+];
 
 export function skipWithoutUsers(): void {
   test.skip(
@@ -9,7 +16,7 @@ export function skipWithoutUsers(): void {
   );
 }
 
-export async function signIn(page: Page, who: "A" | "B"): Promise<void> {
+export async function signIn(page: Page, who: "A" | "B" | "C"): Promise<void> {
   await page.goto("/entrar");
   const form = page.getByRole("form", { name: "Entrar", exact: true });
   await form.getByLabel("E-mail").fill(process.env[`E2E_EMAIL_${who}`]!);

@@ -10,6 +10,7 @@ test("known auth errors become plain sentences and unknown ones stay generic", (
     authMessage("over_email_send_rate_limit"),
     "Muitos e-mails enviados agora. Tente de novo em alguns minutos.",
   );
+  assert.equal(authMessage("same_password"), "A nova senha precisa ser diferente da atual.");
   assert.equal(authMessage("algo_novo"), "Não foi possível concluir agora. Tente de novo.");
   assert.equal(authMessage(undefined), "Não foi possível concluir agora. Tente de novo.");
 });
@@ -17,6 +18,7 @@ test("known auth errors become plain sentences and unknown ones stay generic", (
 test("the callback only goes to fixed places", () => {
   assert.equal(callbackTarget(new URLSearchParams(""), true), "/carteira");
   assert.equal(callbackTarget(new URLSearchParams("type=recovery"), true), "/nova-senha");
-  assert.equal(callbackTarget(new URLSearchParams("type=recovery"), false), "/entrar?aviso=link");
+  assert.equal(callbackTarget(new URLSearchParams("type=recovery"), false), "/entrar?aviso=link-senha");
+  assert.equal(callbackTarget(new URLSearchParams(""), false), "/entrar?aviso=link");
   assert.equal(callbackTarget(new URLSearchParams("next=//malicioso.example"), true), "/carteira");
 });

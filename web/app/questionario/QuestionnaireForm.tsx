@@ -21,7 +21,7 @@ const PROFILE_LABEL: Record<RiskProfile, string> = {
 };
 
 const CLASS_LABEL: Record<TargetClass, React.ReactNode> = {
-  renda_fixa: "Renda fixa",
+  renda_fixa: <Term name="renda_fixa">Renda fixa</Term>,
   acao_br: (
     <>
       <Term name="acao">Ações</Term> do Brasil

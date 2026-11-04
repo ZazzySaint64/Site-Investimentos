@@ -95,6 +95,10 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
       <h2 id="posicoes" className="text-sm font-medium text-muted">
         O que tem na carteira
       </h2>
+      <p className="text-xs text-muted">
+        O resultado de cada linha considera só o que continua na carteira. O total acima inclui
+        também o que já foi vendido.
+      </p>
       <div className="overflow-x-auto rounded-lg border border-border bg-surface">
         <table className="w-full text-sm">
           <thead className="text-xs text-muted">

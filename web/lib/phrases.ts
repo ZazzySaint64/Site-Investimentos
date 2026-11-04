@@ -84,7 +84,7 @@ export function formatSignedMoney(value: number | null): string {
 }
 
 export function formatQuantity(value: number): string {
-  return value.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+  return value.toLocaleString("pt-BR", { maximumFractionDigits: 6 });
 }
 
 export function resultPhrase(result: number): string {

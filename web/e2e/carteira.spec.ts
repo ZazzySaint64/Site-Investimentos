@@ -153,6 +153,9 @@ test("the next person in the same browser sees nothing from the previous one", a
     await expect(page.getByRole("main").getByRole("link", { name: /Itaú/ })).toBeVisible();
 
     await signOut(page);
+    await page.goBack();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("main").getByRole("link", { name: /Itaú/ })).not.toBeVisible();
     await signIn(page, "B");
     await deleteEverything(page); // B starts empty; A's data must still not appear
     await page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Minha carteira" }).click();

@@ -56,21 +56,38 @@ const TRANSACTION_COLUMNS =
   "id,type,quantity,price,date," +
   "asset:assets!inner(ticker,name,class,sector,active,prices(close,date),splits(date,ratio))";
 
+const PAGE = 1000;
+
+// Supabase cuts a response at its row cap, so read in pages until one comes back short.
+async function readAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+  failure: string,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1);
+    if (error || !data) throw new Error(failure);
+    rows.push(...data);
+    if (data.length < PAGE) return rows;
+  }
+}
+
 // Same columns as the demo. RLS keeps only the rows of the session user.
 async function readTransactions(ticker?: string): Promise<Transaction[]> {
   const supabase = await createClient();
-  let query = supabase
-    .from("transactions")
-    .select(TRANSACTION_COLUMNS)
-    .order("date")
-    .order("id")
-    .order("date", { referencedTable: "asset.prices", ascending: false })
-    .limit(1, { referencedTable: "asset.prices" });
-  if (ticker) query = query.eq("asset.ticker", ticker);
-  const { data, error } = await query;
-  if (error) throw new Error("Could not read the transactions.");
+  const data = await readAll<Transaction>((from, to) => {
+    let query = supabase
+      .from("transactions")
+      .select(TRANSACTION_COLUMNS)
+      .order("date")
+      .order("id")
+      .order("date", { referencedTable: "asset.prices", ascending: false })
+      .limit(1, { referencedTable: "asset.prices" });
+    if (ticker) query = query.eq("asset.ticker", ticker);
+    return query.range(from, to) as unknown as PromiseLike<{ data: Transaction[] | null; error: unknown }>;
+  }, "Could not read the transactions.");
   // numeric columns may arrive as strings
-  return (data as unknown as Transaction[]).map((row) => ({
+  return data.map((row) => ({
     ...row,
     quantity: Number(row.quantity),
     price: Number(row.price),
@@ -90,12 +107,16 @@ export async function getTransactions(): Promise<Transaction[]> {
 export async function getFixedIncome(): Promise<FixedIncome[]> {
   await requireUser();
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("fixed_income")
-    .select("id,name,principal,cdi_pct,start_date,maturity,daily_liquidity")
-    .order("start_date")
-    .order("id");
-  if (error) throw new Error("Could not read the fixed income.");
+  const data = await readAll(
+    (from, to) =>
+      supabase
+        .from("fixed_income")
+        .select("id,name,principal,cdi_pct,start_date,maturity,daily_liquidity")
+        .order("start_date")
+        .order("id")
+        .range(from, to),
+    "Could not read the fixed income.",
+  );
   return data.map((row) => ({
     ...row,
     principal: Number(row.principal),

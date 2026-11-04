@@ -36,7 +36,7 @@ npm install
 npm run dev
 ```
 
-Abra `http://localhost:3000`. Testes: `npm test`. Fluxo completo no navegador, com dados reais: `npx playwright install chromium` uma vez, depois, em `jobs/`, `.venv/Scripts/python -m pipeline.e2e_users` (recria as duas contas de teste e grava as credenciais em `web/.env.local`) e, em `web/`, `npm run test:e2e`.
+Abra `http://localhost:3000`. Testes: `npm test`. Fluxo completo no navegador, com dados reais: `npx playwright install chromium` uma vez, depois, em `jobs/`, `.venv/Scripts/python -m pipeline.e2e_users` (recria as três contas de teste e grava as credenciais em `web/.env.local`; rode antes de cada execução completa do e2e, porque um teste apaga a conta C) e, em `web/`, `npm run test:e2e`.
 
 No Windows, basta dar dois cliques em `abrir-site.bat`, na raiz do repositório. Ele instala as dependências na primeira vez, inicia o site e abre o navegador.
 

@@ -11,6 +11,8 @@ export const metadata = { title: "Entrar | Site Investimentos" };
 
 const NOTICES: Record<string, string> = {
   link: "Não foi possível concluir pelo link. Ele pode ter expirado ou ter sido aberto em outro navegador. Se você já confirmou o e-mail, entre com sua senha.",
+  "link-senha":
+    "Não foi possível abrir o link para criar uma nova senha. Ele pode ter expirado ou ter sido aberto em outro navegador. Peça outro link e abra neste navegador.",
   "conta-apagada": "Sua conta e seus dados foram apagados.",
 };
 

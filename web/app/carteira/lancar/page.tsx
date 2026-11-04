@@ -75,7 +75,7 @@ export default async function LancarPage() {
                 )}
                 <DeleteButton
                   action={deleteTransactionAction.bind(null, transaction.id)}
-                  description={`${transaction.type === "buy" ? "compra" : "venda"} de ${transaction.asset.name}`}
+                  description={`${transaction.type === "buy" ? "compra" : "venda"} de ${transaction.asset.name} em ${formatDate(transaction.date)}`}
                 />
               </li>
             ))}
@@ -99,7 +99,7 @@ export default async function LancarPage() {
                 {item.daily_liquidity && <>, com liquidez diária</>}
                 <DeleteButton
                   action={deleteFixedIncomeAction.bind(null, item.id)}
-                  description={`renda fixa ${item.name}`}
+                  description={`renda fixa ${item.name} de ${formatDate(item.start_date)}`}
                 />
               </li>
             ))}

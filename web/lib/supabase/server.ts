@@ -8,6 +8,7 @@ export async function createClient() {
   await connection();
   const cookieStore = await cookies();
   return createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    cookieOptions: { httpOnly: true, secure: process.env.NODE_ENV === "production" },
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll(cookiesToSet) {

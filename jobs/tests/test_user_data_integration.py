@@ -143,6 +143,24 @@ def test_profile_cannot_be_written_for_another_user(rest, users):
     assert rest.post("/profiles", json=own, key="publishable", token=users["b"]).status_code == 201
 
 
+def test_profile_of_another_user_is_invisible_and_untouchable(rest, users):
+    a_id = user_id_of(users["a"])
+    profile = {"user_id": a_id, "risk_profile": "moderado", "target_allocation": {}}
+    assert rest.post("/profiles", json=profile, key="publishable", token=users["a"]).status_code == 201
+
+    seen = rest.get("/profiles?select=user_id", key="publishable", token=users["b"]).json()
+    assert [row for row in seen if row["user_id"] == a_id] == []
+
+    rest.patch(
+        f"/profiles?user_id=eq.{a_id}",
+        json={"risk_profile": "arrojado"},
+        key="publishable",
+        token=users["b"],
+    )
+    stored = rest.get(f"/profiles?user_id=eq.{a_id}&select=risk_profile", key="secret").json()
+    assert stored == [{"risk_profile": "moderado"}]
+
+
 @pytest.mark.parametrize("quantity", [0, -1, None, "NaN", 1e13, 0.0000001])
 def test_invalid_quantity_gets_the_rule_message(rest, users, quantity):
     response = add(rest, users["a"], "ZZTESTE3", "buy", quantity, 5, "2024-01-01")

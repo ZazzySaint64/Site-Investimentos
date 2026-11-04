@@ -10,7 +10,7 @@ import {
   signUp,
 } from "./actions";
 
-type State = { message: string } | null;
+type State = { message: string; email?: string } | null;
 type FormAction = (state: State, formData: FormData) => Promise<State>;
 
 const INPUT = "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm";
@@ -23,6 +23,7 @@ function Field({
   autoComplete,
   minLength,
   hint,
+  defaultValue,
 }: {
   label: string;
   name: string;
@@ -30,6 +31,7 @@ function Field({
   autoComplete?: string;
   minLength?: number;
   hint?: string;
+  defaultValue?: string;
 }) {
   return (
     <label className="block space-y-1 text-sm">
@@ -40,6 +42,7 @@ function Field({
         required
         minLength={minLength}
         autoComplete={autoComplete}
+        defaultValue={defaultValue}
         className={INPUT}
       />
       {hint && <span className="block text-xs text-muted">{hint}</span>}
@@ -56,12 +59,12 @@ function Form({
   action: FormAction;
   label: string;
   submit: string;
-  children: React.ReactNode;
+  children: (email: string | undefined) => React.ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(action, null);
   return (
     <form action={formAction} aria-label={label} className="space-y-3">
-      {children}
+      {children(state?.email)}
       <button type="submit" disabled={pending} className={`${BUTTON} disabled:opacity-60`}>
         {submit}
       </button>
@@ -74,9 +77,13 @@ function Form({
 
 export function SignInForm() {
   return (
-    <Form action={signInWithPassword} label="Entrar" submit="Entrar">
-      <Field label="E-mail" name="email" type="email" autoComplete="email" />
-      <Field label="Senha" name="password" type="password" autoComplete="current-password" />
+    <Form action={signInAndReload} label="Entrar" submit="Entrar">
+      {(email) => (
+        <>
+          <Field label="E-mail" name="email" type="email" autoComplete="email" defaultValue={email} />
+          <Field label="Senha" name="password" type="password" autoComplete="current-password" />
+        </>
+      )}
     </Form>
   );
 }
@@ -84,15 +91,19 @@ export function SignInForm() {
 export function SignUpForm() {
   return (
     <Form action={signUp} label="Criar conta" submit="Criar conta">
-      <Field label="E-mail" name="email" type="email" autoComplete="email" />
-      <Field
-        label="Senha"
-        name="password"
-        type="password"
-        autoComplete="new-password"
-        minLength={8}
-        hint="Mínimo de 8 caracteres."
-      />
+      {(email) => (
+        <>
+          <Field label="E-mail" name="email" type="email" autoComplete="email" defaultValue={email} />
+          <Field
+            label="Senha"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            hint="Mínimo de 8 caracteres."
+          />
+        </>
+      )}
     </Form>
   );
 }
@@ -100,7 +111,9 @@ export function SignUpForm() {
 export function ResetRequestForm() {
   return (
     <Form action={requestPasswordReset} label="Esqueci a senha" submit="Enviar link">
-      <Field label="E-mail" name="email" type="email" autoComplete="email" />
+      {(email) => (
+        <Field label="E-mail" name="email" type="email" autoComplete="email" defaultValue={email} />
+      )}
     </Form>
   );
 }
@@ -108,19 +121,28 @@ export function ResetRequestForm() {
 export function NewPasswordForm() {
   return (
     <Form action={setNewPassword} label="Nova senha" submit="Salvar nova senha">
-      <Field
-        label="Nova senha"
-        name="password"
-        type="password"
-        autoComplete="new-password"
-        minLength={8}
-        hint="Mínimo de 8 caracteres."
-      />
+      {() => (
+        <Field
+          label="Nova senha"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          hint="Mínimo de 8 caracteres."
+        />
+      )}
     </Form>
   );
 }
 
 // Full page loads, not soft navigation: it drops everything the previous user left in memory.
+async function signInAndReload(state: State, formData: FormData): Promise<State> {
+  const result = await signInWithPassword(state, formData);
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload on purpose
+  if (!result) window.location.assign("/carteira");
+  return result;
+}
+
 async function deleteAndLeave(state: State, formData: FormData): Promise<State> {
   const result = await deleteAccount(state, formData);
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload on purpose
@@ -146,7 +168,7 @@ export function SignOutForm() {
 export function DeleteAccountForm() {
   return (
     <Form action={deleteAndLeave} label="Apagar minha conta" submit="Apagar minha conta">
-      <Field label="Digite APAGAR para confirmar" name="confirm" type="text" />
+      {() => <Field label="Digite APAGAR para confirmar" name="confirm" type="text" />}
     </Form>
   );
 }

@@ -1,4 +1,4 @@
-"""Recreates the two e2e test users and writes their credentials to web/.env.local."""
+"""Recreates the three e2e test users and writes their credentials to web/.env.local."""
 
 import secrets
 from pathlib import Path
@@ -12,6 +12,7 @@ ENV_LOCAL = ROOT / "web" / ".env.local"
 USERS = {
     "A": ("e2e-a@example.com", "00000000-0000-4000-8000-0000000000a1"),
     "B": ("e2e-b@example.com", "00000000-0000-4000-8000-0000000000b2"),
+    "C": ("e2e-c@example.com", "00000000-0000-4000-8000-0000000000c3"),
 }
 
 

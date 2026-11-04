@@ -112,7 +112,9 @@ test("signed money shows plus, minus or nothing at zero", () => {
   assert.equal(formatSignedMoney(null), "—");
 });
 
-test("quantity keeps at most two decimals", () => {
+test("quantity keeps at most six decimals", () => {
+  assert.equal(formatQuantity(0.004), "0,004");
+  assert.equal(formatQuantity(11.330000000000002), "11,33");
   assert.equal(formatQuantity(226.6), "226,6");
   assert.equal(formatQuantity(1.5), "1,5");
   assert.equal(formatQuantity(300), "300");
