@@ -1,8 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 export async function createClient() {
+  // getClaims reads the clock, which cannot happen while prerendering.
+  await connection();
   const cookieStore = await cookies();
   return createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
     cookies: {

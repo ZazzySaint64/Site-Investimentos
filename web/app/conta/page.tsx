@@ -1,6 +1,5 @@
 import { requireUser } from "@/lib/supabase/server";
-import { DeleteAccountForm } from "../entrar/AuthForms";
-import { signOut } from "../entrar/actions";
+import { DeleteAccountForm, SignOutForm } from "../entrar/AuthForms";
 
 // The page reads the session cookie, so it cannot be prerendered.
 export const instant = false;
@@ -15,14 +14,7 @@ export default async function ContaPage() {
       <p className="text-sm text-text-soft">
         E-mail: <span className="font-mono">{user.email}</span>
       </p>
-      <form action={signOut}>
-        <button
-          type="submit"
-          className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-bg"
-        >
-          Sair
-        </button>
-      </form>
+      <SignOutForm />
       <details className="rounded-lg border border-border bg-surface p-4">
         <summary className="cursor-pointer text-sm text-text-soft">Apagar minha conta</summary>
         <div className="mt-3 space-y-3">

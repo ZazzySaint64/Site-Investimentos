@@ -21,6 +21,7 @@ test("sign in reaches the wallet and sign out ends the session", async ({ page }
   await expect(page).toHaveURL(/\/carteira/);
   await page.getByRole("link", { name: "Conta" }).click();
   await page.getByRole("button", { name: "Sair" }).click();
+  await page.waitForURL((url) => url.pathname === "/");
   await page.goto("/carteira");
   await expect(page).toHaveURL(/\/entrar/);
 });

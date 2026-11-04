@@ -5,6 +5,7 @@ import {
   deleteAccount,
   requestPasswordReset,
   setNewPassword,
+  signOut,
   signInWithPassword,
   signUp,
 } from "./actions";
@@ -119,9 +120,32 @@ export function NewPasswordForm() {
   );
 }
 
+// Full page loads, not soft navigation: it drops everything the previous user left in memory.
+async function deleteAndLeave(state: State, formData: FormData): Promise<State> {
+  const result = await deleteAccount(state, formData);
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload on purpose
+  if (!result) window.location.assign("/entrar?aviso=conta-apagada");
+  return result;
+}
+
+export function SignOutForm() {
+  async function leave() {
+    await signOut();
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload on purpose
+    window.location.assign("/");
+  }
+  return (
+    <form action={leave}>
+      <button type="submit" className={BUTTON}>
+        Sair
+      </button>
+    </form>
+  );
+}
+
 export function DeleteAccountForm() {
   return (
-    <Form action={deleteAccount} label="Apagar minha conta" submit="Apagar minha conta">
+    <Form action={deleteAndLeave} label="Apagar minha conta" submit="Apagar minha conta">
       <Field label="Digite APAGAR para confirmar" name="confirm" type="text" />
     </Form>
   );

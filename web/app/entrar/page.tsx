@@ -19,7 +19,7 @@ type Props = { searchParams: Promise<{ aviso?: string }> };
 export default async function EntrarPage({ searchParams }: Props) {
   if (await getCurrentUser()) redirect("/carteira");
   const aviso = (await searchParams).aviso;
-  const notice = aviso ? NOTICES[aviso] : undefined;
+  const notice = aviso && Object.hasOwn(NOTICES, aviso) ? NOTICES[aviso] : undefined;
 
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-10">

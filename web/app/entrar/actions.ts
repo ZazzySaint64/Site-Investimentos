@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { authMessage } from "@/lib/auth-messages";
-import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { createClient, requireUser } from "@/lib/supabase/server";
 
 type State = { message: string } | null;
 
@@ -74,7 +74,7 @@ export async function requestPasswordReset(_state: State, formData: FormData): P
 }
 
 export async function setNewPassword(_state: State, formData: FormData): Promise<State> {
-  if (!(await getCurrentUser())) redirect("/entrar");
+  await requireUser();
   const password = String(formData.get("password") ?? "");
   if (password.length < MIN_PASSWORD) return { message: authMessage("weak_password") };
   const supabase = await createClient();
@@ -83,15 +83,15 @@ export async function setNewPassword(_state: State, formData: FormData): Promise
   redirect("/carteira");
 }
 
+// No redirect here: the client reloads the page, so no state of this user survives in memory.
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
   revalidatePath("/", "layout");
-  redirect("/");
 }
 
 export async function deleteAccount(_state: State, formData: FormData): Promise<State> {
-  if (!(await getCurrentUser())) redirect("/entrar");
+  await requireUser();
   if (field(formData, "confirm") !== CONFIRM_WORD) {
     return { message: `Digite ${CONFIRM_WORD} para confirmar.` };
   }
@@ -100,5 +100,5 @@ export async function deleteAccount(_state: State, formData: FormData): Promise<
   if (error) return { message: GENERIC };
   await supabase.auth.signOut({ scope: "local" });
   revalidatePath("/", "layout");
-  redirect("/entrar?aviso=conta-apagada");
+  return null;
 }
