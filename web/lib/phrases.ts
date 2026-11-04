@@ -38,12 +38,34 @@ export function formatDateTime(isoDateTime: string): string {
   }).format(new Date(isoDateTime));
 }
 
-export function returnPhrase(value: number | null): string {
+export function returnPhrase(value: number | null, countsDividends = true): string {
   if (value === null) return SHORT_HISTORY;
   const size = formatPercent(Math.abs(value));
-  return value < 0
-    ? `Em média, caiu ${size} por ano em até 5 anos de histórico, contando proventos.`
-    : `Em média, subiu ${size} por ano em até 5 anos de histórico, contando proventos.`;
+  const direction = value < 0 ? "caiu" : "subiu";
+  const dividends = countsDividends ? ", contando proventos" : "";
+  return `Em média, ${direction} ${size} por ano em até 5 anos de histórico${dividends}.`;
+}
+
+export const COUPON_PHRASE =
+  "Este título paga juros a cada seis meses, e os dados públicos de preço não os incluem. Por isso, não mostramos este número.";
+
+export function paysCoupons(ticker: string): boolean {
+  return /^TD-(IPCAJ|PREJ|IGPMJ)-/.test(ticker);
+}
+
+const OLD_PRICE_MS = 5 * 24 * 60 * 60 * 1000;
+
+export function priceNote(
+  priceDate: string | null,
+  active: boolean,
+  nowMs = Date.now(),
+): string | null {
+  if (!priceDate) return null;
+  const date = formatDate(priceDate);
+  if (!active) return `! Não é mais negociado. Último preço em ${date}.`;
+  return nowMs - Date.parse(`${priceDate}T23:59:59Z`) > OLD_PRICE_MS
+    ? `! Último preço em ${date}.`
+    : null;
 }
 
 export const CLASS_LABELS: Record<string, string> = {
@@ -74,13 +96,7 @@ export function resultPhrase(result: number): string {
 
 const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 
-export function lastGoodFinish(
-  runs: { status: string; finished_at: string | null }[],
-): string | null {
-  return runs.find((run) => run.status !== "failed" && run.finished_at)?.finished_at ?? null;
-}
-
-export function isStale(finishedAt: string, nowMs: number): boolean {
+export function isStale(finishedAt: string, nowMs = Date.now()): boolean {
   return nowMs - Date.parse(finishedAt) > STALE_AFTER_MS;
 }
 

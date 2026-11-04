@@ -23,7 +23,7 @@ from pipeline.catalog import (
     yahoo_symbol,
 )
 from pipeline.sources.bcb import SERIES, fetch_series, year_windows
-from pipeline.sources.tesouro import TesouroData, fetch_tesouro
+from pipeline.sources.tesouro import TesouroData, fetch_tesouro, pays_coupons
 from pipeline.sources.yahoo import History, fetch_history, ten_years_before
 from pipeline.validate import repair_adjusted_close, validate_prices
 
@@ -35,6 +35,7 @@ FAILED_SHARE = 0.10
 ADJUSTMENT_TOLERANCE = 0.0005
 STATS_EXCLUDED_CLASSES = ("tesouro", "indice")
 DELETE_BATCH_SIZE = 200
+COUPON_UNKNOWN = {"return_annual": None, "sharpe": None}
 
 
 @dataclass
@@ -243,6 +244,7 @@ def _write_stats(deps, assets_by_ticker, adj_close_by_ticker, today) -> None:
                     cdi,
                     benchmark,
                 ),
+                **(COUPON_UNKNOWN if pays_coupons(ticker) else {}),
             }
             for ticker, adj_close in adj_close_by_ticker.items()
         ],
@@ -348,10 +350,9 @@ def run(
         print(f"nightly failed: {exc}", file=sys.stderr)
         close("failed", {"error": f"{type(exc).__name__}: {exc}"[:500]})
         return RunResult("failed", failed=["job"])
-    close(
-        result.status,
-        {"failed": result.failed, "rejected": result.rejected, "skipped": result.skipped},
-    )
+    details = {"failed": result.failed, "rejected": result.rejected, "skipped": result.skipped}
+    # A run limited to some tickers does not mean that the whole site was updated.
+    close(result.status, {**details, "tickers": tickers} if tickers else details)
     return result
 
 

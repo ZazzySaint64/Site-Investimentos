@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
+import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
-import { getDemoPersonas, getDemoTransactions, getRuns } from "@/lib/data";
-import { computePortfolio } from "@/lib/portfolio";
+import { getDemoPersonas, getDemoTransactions } from "@/lib/data";
+import { computePortfolio, hasLaterSplit } from "@/lib/portfolio";
 import {
   CLASS_LABELS,
   formatDate,
-  formatDateTime,
   formatMoney,
   formatPercent,
   formatQuantity,
   formatSignedMoney,
   formatSignedPercent,
+  priceNote,
   resultPhrase,
 } from "@/lib/phrases";
 
@@ -33,16 +35,15 @@ type Props = { params: Promise<{ persona: string }> };
 
 export default async function DemoPage({ params }: Props) {
   const slug = (await params).persona;
-  const [personas, transactions, runs] = await Promise.all([
+  await connection();
+  const [personas, transactions] = await Promise.all([
     getDemoPersonas(),
     getDemoTransactions(slug),
-    getRuns(),
   ]);
   const persona = personas.find((item) => item.slug === slug);
   if (!persona) notFound();
 
   const portfolio = computePortfolio(transactions);
-  const lastFinished = runs.find((run) => run.finished_at);
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
@@ -78,11 +79,7 @@ export default async function DemoPage({ params }: Props) {
           })}
         </nav>
         <p className="text-sm text-text-soft">{persona.description}</p>
-        {lastFinished?.finished_at && (
-          <p className="text-xs text-muted">
-            Dados atualizados em {formatDateTime(lastFinished.finished_at)}.
-          </p>
-        )}
+        <DataDate />
       </header>
 
       <section aria-label="Resumo da carteira" className="space-y-2">
@@ -190,9 +187,9 @@ export default async function DemoPage({ params }: Props) {
                         <span className="font-mono"> · {position.ticker}</span>
                       )}
                     </span>
-                    {!position.active && (
+                    {priceNote(position.priceDate, position.active) && (
                       <span className="block text-xs text-text-soft">
-                        ! Não é mais negociado. Mostramos o último preço.
+                        {priceNote(position.priceDate, position.active)}
                       </span>
                     )}
                     {position.price === null && (
@@ -228,6 +225,12 @@ export default async function DemoPage({ params }: Props) {
               <span className="font-mono">{formatQuantity(transaction.quantity)}</span>{" "}
               {transaction.asset.name} a{" "}
               <span className="font-mono">{formatMoney(transaction.price)}</span>
+              {hasLaterSplit(transaction) && (
+                <span className="block text-xs text-muted">
+                  Depois houve <Term name="desdobramento">desdobramento ou grupamento</Term>. Por
+                  isso, a quantidade e o preço médio da tabela são outros.
+                </span>
+              )}
             </li>
           ))}
         </ul>

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { StaleBanner } from "@/components/StaleBanner";
-import { getRuns } from "@/lib/data";
-import { lastGoodFinish } from "@/lib/phrases";
+import { StaleBanner } from "@/components/DataFreshness";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,13 +10,11 @@ export const metadata: Metadata = {
 
 const NAV_LINK = "rounded-md px-2 py-1 text-text-soft hover:text-accent";
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Without the date there is no warning: the pages have their own error screens.
-  const runs = await getRuns().catch(() => []);
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
       <body className="flex min-h-screen flex-col antialiased">
-        <StaleBanner finishedAt={lastGoodFinish(runs)} />
+        <StaleBanner />
         <header className="border-b border-border">
           <nav
             aria-label="Principal"

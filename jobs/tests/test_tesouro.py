@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 import requests
 
-from pipeline.sources.tesouro import fetch_tesouro, parse_csv
+from pipeline.sources.tesouro import fetch_tesouro, parse_csv, pays_coupons
 
 HEADER = (
     "Tipo Titulo;Data Vencimento;Data Base;Taxa Compra Manha;Taxa Venda Manha;"
@@ -128,3 +128,18 @@ def test_fetch_decodes_and_retries(monkeypatch):
 def test_short_line_is_skipped_and_reported(line):
     data = parse_csv(HEADER + LINE + line, TODAY)
     assert len(data.prices["TD-SELIC-20290301"]) == 1 and data.skipped
+
+
+@pytest.mark.parametrize(
+    "ticker,expected",
+    [
+        ("TD-IPCAJ-20350515", True),
+        ("TD-PREJ-20310101", True),
+        ("TD-IGPMJ-20310101", True),
+        ("TD-IPCA-20350515", False),
+        ("TD-SELIC-20290301", False),
+        ("PETR4", False),
+    ],
+)
+def test_pays_coupons(ticker, expected):
+    assert pays_coupons(ticker) is expected

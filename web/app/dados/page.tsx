@@ -1,3 +1,4 @@
+import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
 import { getAssets, getMacroSummary, getRuns, type JobRun } from "@/lib/data";
 import {
@@ -61,7 +62,6 @@ function RunDetails({ run }: { run: JobRun }) {
 
 export default async function DataPage() {
   const [assets, macro, runs] = await Promise.all([getAssets(), getMacroSummary(), getRuns()]);
-  const lastFinished = runs.find((run) => run.finished_at);
   const inflation = accumulatedFromMonthly(macro.ipca.map((point) => point.value));
   const latestIpca = macro.ipca[0];
 
@@ -73,11 +73,7 @@ export default async function DataPage() {
           Veja como cada investimento se comportou e clique em um deles para entender melhor. Toque
           nas palavras sublinhadas para ver o que significam.
         </p>
-        <p className="text-xs text-muted">
-          {lastFinished?.finished_at
-            ? `Dados atualizados em ${formatDateTime(lastFinished.finished_at)}.`
-            : "Os dados ainda não foram atualizados."}
-        </p>
+        <DataDate />
       </header>
 
       <section aria-labelledby="macro" className="space-y-3">

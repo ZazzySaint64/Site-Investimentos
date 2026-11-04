@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { computePortfolio, type DemoTransaction } from "./portfolio.ts";
+import { computePortfolio, hasLaterSplit, type DemoTransaction } from "./portfolio.ts";
 
 type Options = {
   close?: number | null;
@@ -183,4 +183,29 @@ test("empty list gives zeros", () => {
   const p = computePortfolio([]);
   assert.deepEqual([p.value, p.result, p.resultShare, p.positions.length], [0, 0, 0, 0]);
   assert.deepEqual(p.allocation, []);
+});
+
+test("asset without price stays out of the invested amount and the result share", () => {
+  const p = computePortfolio([
+    buy("A", 10, 100, "2024-01-01", { close: 150 }),
+    buy("B", 10, 100, "2024-01-01", { close: null }),
+  ]);
+  assert.equal(p.invested, 1000);
+  assert.equal(p.resultShare, 0.5);
+});
+
+test("sold asset still counts in the total bought when it has no price", () => {
+  const p = computePortfolio([
+    buy("A", 10, 100, "2024-01-01", { close: null }),
+    sell("A", 10, 120, "2024-06-01", { close: null }),
+  ]);
+  assert.equal(p.result, 200);
+  assert.equal(p.resultShare, 0.2);
+});
+
+test("hasLaterSplit tells when the quantity changed after the operation", () => {
+  const splits = [{ date: "2024-06-01", ratio: 2 }];
+  assert.equal(hasLaterSplit(buy("A", 10, 100, "2024-01-01", { splits })), true);
+  assert.equal(hasLaterSplit(buy("A", 10, 100, "2024-06-01", { splits })), false);
+  assert.equal(hasLaterSplit(buy("A", 10, 100, "2024-01-01")), false);
 });

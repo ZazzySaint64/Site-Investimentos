@@ -22,3 +22,15 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      # Cached pages renew on the first visit, so these requests spare a visitor the old numbers.
+      - name: Refresh public pages
+        if: vars.SITE_URL != ''
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          for round in 1 2; do
+            for page in / /dados /demo/ana /demo/bruno /demo/carla; do
+              curl -sS -o /dev/null --max-time 60 "$SITE_URL$page" || true
+            done
+            sleep 65
+          done

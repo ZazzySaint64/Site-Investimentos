@@ -9,7 +9,9 @@ import {
   formatSignedPercent,
   growthOfThousand,
   isStale,
-  lastGoodFinish,
+  paysCoupons,
+  priceNote,
+  returnPhrase,
   resultPhrase,
   riskLabel,
   runSummary,
@@ -122,15 +124,27 @@ test("data becomes stale only after three full days", () => {
   assert.equal(isStale(finished, Date.parse("2026-11-04T02:30:01Z")), true);
 });
 
-test("failed runs do not count as an update", () => {
-  const runs = [
-    { status: "failed", finished_at: "2026-11-03T02:30:00Z" },
-    { status: "partial", finished_at: "2026-11-02T02:30:00Z" },
-  ];
-  assert.equal(lastGoodFinish(runs), "2026-11-02T02:30:00Z");
+test("coupon titles are recognized by the ticker", () => {
+  assert.equal(paysCoupons("TD-IPCAJ-20350515"), true);
+  assert.equal(paysCoupons("TD-PREJ-20310101"), true);
+  assert.equal(paysCoupons("TD-IGPMJ-20310101"), true);
+  assert.equal(paysCoupons("TD-IPCA-20350515"), false);
+  assert.equal(paysCoupons("PETR4"), false);
 });
 
-test("no finished run gives no date", () => {
-  assert.equal(lastGoodFinish([{ status: "running", finished_at: null }]), null);
-  assert.equal(lastGoodFinish([]), null);
+test("return phrase mentions dividends only where they exist", () => {
+  assert.match(returnPhrase(0.2), /contando proventos/);
+  assert.doesNotMatch(returnPhrase(0.2, false), /proventos/);
+});
+
+test("price note appears for old prices and inactive assets", () => {
+  const now = Date.parse("2026-11-20T12:00:00Z");
+  assert.equal(priceNote("2026-11-19", true, now), null);
+  assert.equal(priceNote("2026-11-15", true, now), null);
+  assert.equal(priceNote("2026-11-10", true, now), "! Último preço em 10/11/2026.");
+  assert.equal(
+    priceNote("2026-11-19", false, now),
+    "! Não é mais negociado. Último preço em 19/11/2026.",
+  );
+  assert.equal(priceNote(null, true, now), null);
 });

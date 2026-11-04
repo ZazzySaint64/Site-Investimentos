@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getAssets, getRuns } from "@/lib/data";
-import { formatDateTime } from "@/lib/phrases";
+import { DataDate } from "@/components/DataFreshness";
+import { getAssets } from "@/lib/data";
 
 const STEPS = [
   {
@@ -32,8 +32,7 @@ const COMING = [
 ];
 
 export default async function Home() {
-  const [assets, runs] = await Promise.all([getAssets(), getRuns()]);
-  const lastFinished = runs.find((run) => run.finished_at);
+  const assets = await getAssets();
 
   return (
     <main className="mx-auto max-w-6xl space-y-12 px-4 py-12">
@@ -59,11 +58,8 @@ export default async function Home() {
             Explorar ativos
           </Link>
         </div>
-        <p className="text-sm text-muted">
-          {assets.length} ativos acompanhados.
-          {lastFinished?.finished_at &&
-            ` Dados atualizados em ${formatDateTime(lastFinished.finished_at)}.`}
-        </p>
+        <p className="text-sm text-muted">{assets.length} ativos acompanhados.</p>
+        <DataDate />
       </section>
 
       <section aria-labelledby="como" className="space-y-4">

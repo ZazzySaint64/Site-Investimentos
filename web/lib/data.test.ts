@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import { getRuns } from "./data.ts";
+import { getLastGoodUpdate, getRuns } from "./data.ts";
 
 const realFetch = globalThis.fetch;
 
@@ -39,4 +39,36 @@ test("the key goes only in the apikey header", async () => {
   }) as unknown as typeof fetch;
   await getRuns();
   assert.deepEqual(headers, { apikey: "sb_publishable_test" });
+});
+
+test("database reads have a time limit", async () => {
+  let signal: unknown;
+  globalThis.fetch = (async (_url: string, init: RequestInit) => {
+    signal = init.signal;
+    return new Response("[]", { status: 200 });
+  }) as unknown as typeof fetch;
+  await getRuns();
+  assert.ok(signal instanceof AbortSignal);
+});
+
+test("last update reads only complete nightly runs that did not fail, without cache", async () => {
+  let url = "";
+  let cache: unknown;
+  globalThis.fetch = (async (target: string, init: RequestInit) => {
+    url = target;
+    cache = init.cache;
+    return new Response(JSON.stringify([{ finished_at: "2026-11-03T02:30:00Z" }]), { status: 200 });
+  }) as unknown as typeof fetch;
+  assert.equal(await getLastGoodUpdate(), "2026-11-03T02:30:00Z");
+  assert.match(url, /job=eq\.nightly/);
+  assert.match(url, /status=neq\.failed/);
+  assert.match(url, /finished_at=not\.is\.null/);
+  assert.match(url, /details->>tickers=is\.null/);
+  assert.match(url, /limit=1/);
+  assert.equal(cache, "no-store");
+});
+
+test("last update is null when no run qualifies", async () => {
+  globalThis.fetch = (async () => new Response("[]", { status: 200 })) as typeof fetch;
+  assert.equal(await getLastGoodUpdate(), null);
 });

@@ -69,6 +69,10 @@ export const GLOSSARY = {
     title: "Alocação",
     text: "Como o dinheiro está dividido entre os tipos de investimento. Colocar tudo em um só tipo aumenta o risco.",
   },
+  desdobramento: {
+    title: "Desdobramento e grupamento",
+    text: "A empresa muda o número de ações sem mudar o valor total. No desdobramento, cada ação vira várias e o preço cai na mesma proporção. No grupamento, ocorre o contrário.",
+  },
   pregao: {
     title: "Pregão",
     text: "Cada dia em que a bolsa funciona. Fins de semana e feriados não contam.",

@@ -52,6 +52,10 @@ function laterSplitFactor(transaction: DemoTransaction): number {
     .reduce((factor, split) => factor * split.ratio, 1);
 }
 
+export function hasLaterSplit(transaction: DemoTransaction): boolean {
+  return transaction.asset.splits.some((split) => split.date > transaction.date);
+}
+
 function chronological(a: DemoTransaction, b: DemoTransaction): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   if (a.type !== b.type) return a.type === "buy" ? -1 : 1;
@@ -59,9 +63,11 @@ function chronological(a: DemoTransaction, b: DemoTransaction): number {
 }
 
 export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
-  const holdings = new Map<string, { asset: DemoTransaction["asset"]; quantity: number; cost: number }>();
+  const holdings = new Map<
+    string,
+    { asset: DemoTransaction["asset"]; quantity: number; cost: number; bought: number }
+  >();
   let realized = 0;
-  let bought = 0;
 
   for (const transaction of [...transactions].sort(chronological)) {
     const factor = laterSplitFactor(transaction);
@@ -71,11 +77,12 @@ export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
       asset: transaction.asset,
       quantity: 0,
       cost: 0,
+      bought: 0,
     };
     if (transaction.type === "buy") {
       holding.quantity += quantity;
       holding.cost += quantity * price;
-      bought += quantity * price;
+      holding.bought += quantity * price;
     } else {
       const averageCost = holding.quantity > 0 ? holding.cost / holding.quantity : 0;
       realized += (price - averageCost) * quantity;
@@ -86,6 +93,10 @@ export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
   }
 
   const held = [...holdings.values()].filter((holding) => holding.quantity > EMPTY_QUANTITY);
+  // A position without a price has no result yet, so its cost stays out of the comparisons too.
+  const bought = [...holdings.values()]
+    .filter((holding) => holding.asset.prices[0] || holding.quantity <= EMPTY_QUANTITY)
+    .reduce((total, holding) => total + holding.bought, 0);
   const value = held.reduce(
     (total, { asset, quantity }) => total + (asset.prices[0] ? quantity * asset.prices[0].close : 0),
     0,
@@ -124,7 +135,9 @@ export function computePortfolio(transactions: DemoTransaction[]): Portfolio {
   const result = openResult + realized;
   return {
     positions,
-    invested: positions.reduce((total, position) => total + position.cost, 0),
+    invested: positions
+      .filter((position) => position.price !== null)
+      .reduce((total, position) => total + position.cost, 0),
     value,
     result,
     resultShare: bought > 0 ? result / bought : 0,
