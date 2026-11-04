@@ -13,6 +13,9 @@ import {
 } from "@/lib/phrases";
 import { AssetTable } from "./AssetTable";
 
+// All of this page depends on the database, so it cannot be prerendered.
+export const instant = false;
+
 export const metadata = { title: "Ativos | Site Investimentos" };
 
 function MacroCard({
