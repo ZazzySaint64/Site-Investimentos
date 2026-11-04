@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
@@ -19,6 +20,7 @@ import {
   sharpePhrase,
   volatilityPhrase,
 } from "@/lib/phrases";
+import { MyPosition } from "./MyPosition";
 import { PriceChart } from "./PriceChart";
 
 // Each ticker reads the database on request, so this page cannot be prerendered.
@@ -98,6 +100,10 @@ export default async function AssetDataPage({ params }: Props) {
         </p>
         <DataDate />
       </header>
+
+      <Suspense fallback={null}>
+        <MyPosition ticker={ticker} />
+      </Suspense>
 
       {growth && (
         <section

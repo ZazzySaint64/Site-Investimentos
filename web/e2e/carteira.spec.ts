@@ -113,3 +113,27 @@ test("fixed income appears without a link to an asset page", async ({ page }) =>
     await deleteEverything(page);
   }
 });
+
+test("the asset page shows the position only to whoever holds it", async ({ page, browser }) => {
+  skipWithoutUsers();
+  await signIn(page, "A");
+  const context = await browser.newContext({ baseURL: "http://localhost:3000" });
+  try {
+    await page.goto("/carteira/lancar");
+    await launch(page, { asset: "ITUB4", operation: "Compra", quantity: "10", price: "30", date: "2024-03-15" });
+    const heading = (target: typeof page) => target.getByRole("main").getByRole("heading", { name: "Sua posição" });
+    await page.goto("/dados/ITUB4");
+    await expect(heading(page)).toBeVisible();
+    await page.goto("/dados/PETR4");
+    await expect(page.getByText("O que os números dizem")).toBeVisible();
+    await expect(heading(page)).toHaveCount(0);
+
+    const anonymous = await context.newPage();
+    await anonymous.goto("/dados/ITUB4");
+    await expect(anonymous.getByText("O que os números dizem")).toBeVisible();
+    await expect(heading(anonymous)).toHaveCount(0);
+  } finally {
+    await context.close();
+    await deleteEverything(page);
+  }
+});
