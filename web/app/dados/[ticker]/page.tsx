@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
-import { getAsset, getCdiHistory, getPrices, getRuns } from "@/lib/data";
+import { getAsset, getCdiHistory, getPrices } from "@/lib/data";
 import type { GlossaryKey } from "@/lib/glossary";
 import {
+  COUPON_PHRASE,
   correlationPhrase,
   drawdownPhrase,
   formatDate,
-  formatDateTime,
   formatMonthYear,
   formatMoney,
   formatPercent,
   formatSignedPercent,
   growthOfThousand,
+  paysCoupons,
   returnPhrase,
   sharpePhrase,
   volatilityPhrase,
@@ -64,18 +66,18 @@ function Metric({
 
 export default async function AssetDataPage({ params }: Props) {
   const ticker = decodeURIComponent((await params).ticker);
-  const [asset, prices, cdi, runs] = await Promise.all([
+  const [asset, prices, cdi] = await Promise.all([
     getAsset(ticker),
     getPrices(ticker),
     getCdiHistory(),
-    getRuns(),
   ]);
   if (!asset) notFound();
 
   const stats = asset.asset_stats;
-  const lastFinished = runs.find((run) => run.finished_at);
   const isIndex = asset.class === "indice";
-  const growth = isIndex ? null : growthOfThousand(prices, cdi);
+  const isTesouro = asset.class === "tesouro";
+  const coupons = paysCoupons(asset.ticker);
+  const growth = isIndex || coupons ? null : growthOfThousand(prices, cdi);
   const chartPoints = prices.filter(
     (_, index) => index % CHART_POINT_STEP === 0 || index === prices.length - 1,
   );
@@ -94,11 +96,7 @@ export default async function AssetDataPage({ params }: Props) {
           {asset.sector && ` · ${asset.sector}`}
           {asset.maturity && ` · Vence em ${formatDate(asset.maturity)}`}
         </p>
-        {lastFinished?.finished_at && (
-          <p className="text-xs text-muted">
-            Dados atualizados em {formatDateTime(lastFinished.finished_at)}.
-          </p>
-        )}
+        <DataDate />
       </header>
 
       {growth && (
@@ -113,7 +111,13 @@ export default async function AssetDataPage({ params }: Props) {
             <div>
               <p className="font-mono text-3xl text-accent">{formatMoney(growth.asset)}</p>
               <p className="mt-1 text-sm text-text-soft">
-                hoje, neste ativo, contando <Term name="proventos">proventos</Term>
+                {isTesouro ? (
+                  "hoje, neste título"
+                ) : (
+                  <>
+                    hoje, neste ativo, contando <Term name="proventos">proventos</Term>
+                  </>
+                )}
               </p>
             </div>
             {growth.cdi !== null && (
@@ -140,8 +144,10 @@ export default async function AssetDataPage({ params }: Props) {
           <Metric
             term="retorno"
             label="Retorno ao ano"
-            value={formatSignedPercent(stats?.return_annual ?? null)}
-            phrase={returnPhrase(stats?.return_annual ?? null)}
+            value={coupons ? "—" : formatSignedPercent(stats?.return_annual ?? null)}
+            phrase={
+              coupons ? COUPON_PHRASE : returnPhrase(stats?.return_annual ?? null, !isTesouro)
+            }
           />
           <Metric
             term="volatilidade"
@@ -158,8 +164,8 @@ export default async function AssetDataPage({ params }: Props) {
           <Metric
             term="sharpe"
             label="Retorno pelo risco"
-            value={formatRatio(stats?.sharpe ?? null)}
-            phrase={sharpePhrase(stats?.sharpe ?? null)}
+            value={coupons ? "—" : formatRatio(stats?.sharpe ?? null)}
+            phrase={coupons ? COUPON_PHRASE : sharpePhrase(stats?.sharpe ?? null)}
           />
           {!isIndex && (
             <Metric

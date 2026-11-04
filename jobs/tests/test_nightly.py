@@ -570,3 +570,29 @@ def test_change_only_on_the_latest_saved_day_does_not_refetch(fake):
     fake.run()
     assert len([call for call in fake.history_calls if call[0] == "A.SA"]) == 1
     assert fake.prices("A")[-1]["close"] == 101.0
+
+
+def title(ticker):
+    return Asset(ticker, ticker, "tesouro", "BRL", "Renda fixa", False, maturity=date(2035, 5, 15))
+
+
+def test_coupon_title_has_no_return_because_coupons_are_not_counted(fake):
+    coupon = title("TD-IPCAJ-20350515")
+    plain = title("TD-IPCA-20350515")
+    fake.tesouro = TesouroData(
+        [coupon, plain],
+        {coupon.ticker: monthly_history(14), plain.ticker: monthly_history(14)},
+        [],
+    )
+    fake.run()
+    stats = {r["asset_id"]: r for r in fake.rows("asset_stats")}
+    coupon_stats = stats[fake.asset(coupon.ticker)["id"]]
+    assert coupon_stats["return_annual"] is None
+    assert coupon_stats["sharpe"] is None
+    assert coupon_stats["volatility"] is not None
+    assert stats[fake.asset(plain.ticker)["id"]]["return_annual"] is not None
+
+
+def test_run_limited_by_tickers_is_marked_in_details(fake):
+    fake.run(tickers=["A"])
+    assert fake.rows("job_runs")[-1]["details"]["tickers"] == ["A"]

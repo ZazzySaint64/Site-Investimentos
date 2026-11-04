@@ -4,8 +4,15 @@ import { GLOSSARY } from "./glossary.ts";
 import {
   accumulatedFromMonthly,
   formatMonthYear,
+  formatQuantity,
+  formatSignedMoney,
   formatSignedPercent,
   growthOfThousand,
+  isStale,
+  paysCoupons,
+  priceNote,
+  returnPhrase,
+  resultPhrase,
   riskLabel,
   runSummary,
 } from "./phrases.ts";
@@ -90,4 +97,54 @@ test("every glossary entry has a title and an explanation", () => {
 test("a value that rounds to zero has no sign", () => {
   assert.equal(formatSignedPercent(-0.0002), "0,0%");
   assert.equal(formatSignedPercent(0.0002), "0,0%");
+});
+
+test("result phrase says gain, loss or neither", () => {
+  assert.match(resultPhrase(800), /ganhou/);
+  assert.match(resultPhrase(-800), /perdeu/);
+  assert.match(resultPhrase(0), /nem ganhou nem perdeu/);
+});
+
+test("signed money shows plus, minus or nothing at zero", () => {
+  assert.match(formatSignedMoney(1234.5), /^\+R\$\s1\.234,50$/);
+  assert.match(formatSignedMoney(-1234.5), /^−R\$\s1\.234,50$/);
+  assert.match(formatSignedMoney(0.001), /^R\$\s0,00$/);
+  assert.equal(formatSignedMoney(null), "—");
+});
+
+test("quantity keeps at most two decimals", () => {
+  assert.equal(formatQuantity(226.6), "226,6");
+  assert.equal(formatQuantity(1.5), "1,5");
+  assert.equal(formatQuantity(300), "300");
+});
+
+test("data becomes stale only after three full days", () => {
+  const finished = "2026-11-01T02:30:00Z";
+  assert.equal(isStale(finished, Date.parse("2026-11-04T02:30:00Z")), false);
+  assert.equal(isStale(finished, Date.parse("2026-11-04T02:30:01Z")), true);
+});
+
+test("coupon titles are recognized by the ticker", () => {
+  assert.equal(paysCoupons("TD-IPCAJ-20350515"), true);
+  assert.equal(paysCoupons("TD-PREJ-20310101"), true);
+  assert.equal(paysCoupons("TD-IGPMJ-20310101"), true);
+  assert.equal(paysCoupons("TD-IPCA-20350515"), false);
+  assert.equal(paysCoupons("PETR4"), false);
+});
+
+test("return phrase mentions dividends only where they exist", () => {
+  assert.match(returnPhrase(0.2), /contando proventos/);
+  assert.doesNotMatch(returnPhrase(0.2, false), /proventos/);
+});
+
+test("price note appears for old prices and inactive assets", () => {
+  const now = Date.parse("2026-11-20T12:00:00Z");
+  assert.equal(priceNote("2026-11-19", true, now), null);
+  assert.equal(priceNote("2026-11-15", true, now), null);
+  assert.equal(priceNote("2026-11-10", true, now), "! Último preço em 10/11/2026.");
+  assert.equal(
+    priceNote("2026-11-19", false, now),
+    "! Não é mais negociado. Último preço em 19/11/2026.",
+  );
+  assert.equal(priceNote(null, true, now), null);
 });

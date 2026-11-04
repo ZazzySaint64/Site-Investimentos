@@ -28,6 +28,14 @@ PREFIXES = {
 }
 
 
+COUPON_PREFIXES = ("IPCAJ", "PREJ", "IGPMJ")
+
+
+def pays_coupons(ticker: str) -> bool:
+    """The spreadsheet has no coupon values, so returns of these titles would be understated."""
+    return ticker.startswith(tuple(f"TD-{prefix}-" for prefix in COUPON_PREFIXES))
+
+
 @dataclass
 class TesouroData:
     assets: list[Asset]

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { StaleBanner } from "@/components/DataFreshness";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="pt-BR">
       <body className="flex min-h-screen flex-col antialiased">
+        <StaleBanner />
         <header className="border-b border-border">
           <nav
             aria-label="Principal"
@@ -20,6 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             <Link href="/" className="mr-auto font-semibold text-text">
               Site Investimentos
+            </Link>
+            <Link href="/demo/ana" className={NAV_LINK}>
+              Carteira de exemplo
             </Link>
             <Link href="/dados" className={NAV_LINK}>
               Ativos

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getAssets, getRuns } from "@/lib/data";
-import { formatDateTime } from "@/lib/phrases";
+import { DataDate } from "@/components/DataFreshness";
+import { getAssets } from "@/lib/data";
 
 const STEPS = [
   {
@@ -18,6 +18,7 @@ const STEPS = [
 ];
 
 const READY = [
+  "Carteira de exemplo, sem precisar criar conta",
   "Preços, juros e inflação atualizados toda noite",
   "Estatísticas de cada ativo com explicação",
   "Comparação de cada ativo com o CDI",
@@ -25,15 +26,13 @@ const READY = [
 ];
 
 const COMING = [
-  "Carteira de exemplo, sem precisar criar conta",
   "Sua própria carteira, com login",
   "Simulações do futuro, sempre como faixa de possibilidades",
   "Assistente de IA que só afirma o que os dados mostram",
 ];
 
 export default async function Home() {
-  const [assets, runs] = await Promise.all([getAssets(), getRuns()]);
-  const lastFinished = runs.find((run) => run.finished_at);
+  const assets = await getAssets();
 
   return (
     <main className="mx-auto max-w-6xl space-y-12 px-4 py-12">
@@ -47,23 +46,20 @@ export default async function Home() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/dados"
+            href="/demo/ana"
             className="rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90"
+          >
+            Ver carteira de exemplo
+          </Link>
+          <Link
+            href="/dados"
+            className="rounded-md border border-border px-4 py-2.5 text-sm hover:text-accent"
           >
             Explorar ativos
           </Link>
-          <Link
-            href="/glossario"
-            className="rounded-md border border-border px-4 py-2.5 text-sm hover:text-accent"
-          >
-            Ver o glossário
-          </Link>
         </div>
-        <p className="text-sm text-muted">
-          {assets.length} ativos acompanhados.
-          {lastFinished?.finished_at &&
-            ` Dados atualizados em ${formatDateTime(lastFinished.finished_at)}.`}
-        </p>
+        <p className="text-sm text-muted">{assets.length} ativos acompanhados.</p>
+        <DataDate />
       </section>
 
       <section aria-labelledby="como" className="space-y-4">

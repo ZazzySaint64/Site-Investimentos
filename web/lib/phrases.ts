@@ -38,12 +38,66 @@ export function formatDateTime(isoDateTime: string): string {
   }).format(new Date(isoDateTime));
 }
 
-export function returnPhrase(value: number | null): string {
+export function returnPhrase(value: number | null, countsDividends = true): string {
   if (value === null) return SHORT_HISTORY;
   const size = formatPercent(Math.abs(value));
-  return value < 0
-    ? `Em média, caiu ${size} por ano em até 5 anos de histórico, contando proventos.`
-    : `Em média, subiu ${size} por ano em até 5 anos de histórico, contando proventos.`;
+  const direction = value < 0 ? "caiu" : "subiu";
+  const dividends = countsDividends ? ", contando proventos" : "";
+  return `Em média, ${direction} ${size} por ano em até 5 anos de histórico${dividends}.`;
+}
+
+export const COUPON_PHRASE =
+  "Este título paga juros a cada seis meses, e os dados públicos de preço não os incluem. Por isso, não mostramos este número.";
+
+export function paysCoupons(ticker: string): boolean {
+  return /^TD-(IPCAJ|PREJ|IGPMJ)-/.test(ticker);
+}
+
+const OLD_PRICE_MS = 5 * 24 * 60 * 60 * 1000;
+
+export function priceNote(
+  priceDate: string | null,
+  active: boolean,
+  nowMs = Date.now(),
+): string | null {
+  if (!priceDate) return null;
+  const date = formatDate(priceDate);
+  if (!active) return `! Não é mais negociado. Último preço em ${date}.`;
+  return nowMs - Date.parse(`${priceDate}T23:59:59Z`) > OLD_PRICE_MS
+    ? `! Último preço em ${date}.`
+    : null;
+}
+
+export const CLASS_LABELS: Record<string, string> = {
+  acao_br: "Ação",
+  fii: "Fundo imobiliário",
+  tesouro: "Tesouro Direto",
+  indice: "Índice",
+};
+
+export function formatSignedMoney(value: number | null): string {
+  if (value === null) return MISSING;
+  const size = moneyFormat.format(Math.abs(value));
+  if (size === moneyFormat.format(0)) return size;
+  return `${value < 0 ? "−" : "+"}${size}`;
+}
+
+export function formatQuantity(value: number): string {
+  return value.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+}
+
+export function resultPhrase(result: number): string {
+  const size = moneyFormat.format(Math.abs(result));
+  if (size === moneyFormat.format(0)) return "A carteira nem ganhou nem perdeu até hoje.";
+  return result < 0
+    ? `A carteira perdeu ${size} até hoje, sem contar proventos.`
+    : `A carteira ganhou ${size} até hoje, sem contar proventos.`;
+}
+
+const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function isStale(finishedAt: string, nowMs = Date.now()): boolean {
+  return nowMs - Date.parse(finishedAt) > STALE_AFTER_MS;
 }
 
 export function riskLabel(volatility: number | null): string {

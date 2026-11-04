@@ -1,6 +1,9 @@
 // Reads from Supabase with the publishable key. The site never calls the external data sources.
 
+import type { DemoTransaction } from "./portfolio.ts";
+
 const PAGE_SIZE = 1000;
+const TIMEOUT_MS = 8000;
 
 export type Stats = {
   as_of: string;
@@ -37,8 +40,16 @@ export type JobRun = {
 
 export type MacroPoint = { series: string; date: string; value: number };
 export type PricePoint = { date: string; close: number; adj_close: number };
+const CACHED = { next: { revalidate: 60 } } as RequestInit;
 
-async function get<T>(path: string): Promise<T> {
+export type DemoPersona = {
+  slug: string;
+  name: string;
+  risk_profile: string;
+  description: string;
+};
+
+async function get<T>(path: string, cacheOptions: RequestInit = CACHED): Promise<T> {
   const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } = process.env;
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     throw new Error("SUPABASE_URL ou SUPABASE_PUBLISHABLE_KEY não configuradas");
@@ -46,7 +57,8 @@ async function get<T>(path: string): Promise<T> {
   const request = () =>
     fetch(`${SUPABASE_URL}/rest/v1${path}`, {
       headers: { apikey: SUPABASE_PUBLISHABLE_KEY },
-      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      ...cacheOptions,
     });
   const response = await request().catch(request);
   if (!response.ok) throw new Error(`Supabase respondeu HTTP ${response.status}`);
@@ -88,6 +100,30 @@ export async function getPrices(ticker: string): Promise<PricePoint[]> {
 
 export function getRuns(): Promise<JobRun[]> {
   return get("/job_runs?select=id,job,status,started_at,finished_at,details&order=id.desc&limit=5");
+}
+
+/** When the whole site was last updated. Runs that failed or covered few tickers do not count. */
+export async function getLastGoodUpdate(): Promise<string | null> {
+  const rows = await get<{ finished_at: string }[]>(
+    "/job_runs?select=finished_at&job=eq.nightly&status=neq.failed&finished_at=not.is.null" +
+      "&details->>tickers=is.null&order=id.desc&limit=1",
+    { cache: "no-store" },
+  );
+  return rows[0]?.finished_at ?? null;
+}
+
+export function getDemoPersonas(): Promise<DemoPersona[]> {
+  return get("/demo_personas?select=slug,name,risk_profile,description&order=id");
+}
+
+const DEMO_COLUMNS =
+  "id,type,quantity,price,date,demo_personas!inner(slug)," +
+  "asset:assets(ticker,name,class,sector,active,prices(close,date),splits(date,ratio))";
+
+export function getDemoTransactions(slug: string): Promise<DemoTransaction[]> {
+  const filter = `demo_personas.slug=eq.${encodeURIComponent(slug)}`;
+  const latestPrice = "asset.prices.order=date.desc&asset.prices.limit=1";
+  return get(`/demo_transactions?select=${DEMO_COLUMNS}&${filter}&${latestPrice}&order=date,id`);
 }
 
 export function getCdiHistory(): Promise<MacroPoint[]> {
