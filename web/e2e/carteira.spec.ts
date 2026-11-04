@@ -13,7 +13,7 @@ test("a purchase is saved, an impossible sale shows the rule, and deleting clear
   await expect(row).toBeVisible();
 
   await launch(page, { asset: "ITUB4", operation: "Venda", quantity: "99999", price: "30", date: "2024-04-15" });
-  await expect(page.getByRole("alert")).toContainText("posição negativa");
+  await expect(page.getByRole("form", { name: "Compra e venda" }).getByRole("alert")).toContainText("posição negativa");
   await expect(page.getByLabel("Quantidade", { exact: true })).toHaveValue("99999");
 
   await row.getByRole("button", { name: "Apagar" }).click();

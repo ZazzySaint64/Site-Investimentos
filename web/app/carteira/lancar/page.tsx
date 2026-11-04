@@ -73,7 +73,10 @@ export default async function LancarPage() {
                     isso, a quantidade e o preço médio da tabela são outros.
                   </span>
                 )}
-                <DeleteButton action={deleteTransactionAction.bind(null, transaction.id)} />
+                <DeleteButton
+                  action={deleteTransactionAction.bind(null, transaction.id)}
+                  description={`${transaction.type === "buy" ? "compra" : "venda"} de ${transaction.asset.name}`}
+                />
               </li>
             ))}
           </ul>
@@ -94,7 +97,10 @@ export default async function LancarPage() {
                 <span className="font-mono">{formatQuantity(item.cdi_pct)}%</span> do CDI
                 {item.maturity && <>, vencimento em {formatDate(item.maturity)}</>}
                 {item.daily_liquidity && <>, com liquidez diária</>}
-                <DeleteButton action={deleteFixedIncomeAction.bind(null, item.id)} />
+                <DeleteButton
+                  action={deleteFixedIncomeAction.bind(null, item.id)}
+                  description={`renda fixa ${item.name}`}
+                />
               </li>
             ))}
           </ul>

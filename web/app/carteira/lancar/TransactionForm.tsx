@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { addTransactionAction } from "./actions";
 
 const INPUT = "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm";
@@ -14,6 +14,7 @@ export function TransactionForm({
 }) {
   const [state, formAction, pending] = useActionState(addTransactionAction, null);
   const v = state?.values ?? {};
+  const typeId = useId();
   return (
     <form action={formAction} aria-label="Compra e venda" className="space-y-3">
       <label className="block space-y-1 text-sm">
@@ -25,13 +26,15 @@ export function TransactionForm({
           <option key={asset.ticker} value={asset.ticker} label={asset.name} />
         ))}
       </datalist>
-      <label className="block space-y-1 text-sm">
-        <span className="text-text-soft">Operação</span>
-        <select name="type" defaultValue={v.type ?? "buy"} className={INPUT}>
+      <div className="space-y-1 text-sm">
+        <label htmlFor={typeId} className="block text-text-soft">
+          Operação
+        </label>
+        <select id={typeId} name="type" defaultValue={v.type ?? "buy"} className={INPUT}>
           <option value="buy">Compra</option>
           <option value="sell">Venda</option>
         </select>
-      </label>
+      </div>
       <label className="block space-y-1 text-sm">
         <span className="text-text-soft">Quantidade</span>
         <input name="quantity" type="number" step="any" min="0" defaultValue={v.quantity} className={INPUT} />
