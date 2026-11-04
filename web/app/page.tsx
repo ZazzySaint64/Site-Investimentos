@@ -34,12 +34,9 @@ const COMING = [
 
 // Reads the database at request time, so the rest of the page stays prerendered.
 async function AssetCount() {
-  try {
-    const assets = await getAssets();
-    return <p className="text-sm text-muted">{assets.length} ativos acompanhados.</p>;
-  } catch {
-    return null;
-  }
+  const assets = await getAssets().catch(() => null);
+  if (!assets) return null;
+  return <p className="text-sm text-muted">{assets.length} ativos acompanhados.</p>;
 }
 
 export default function Home() {
