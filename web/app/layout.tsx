@@ -26,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Link href="/demo/ana" className={NAV_LINK}>
               Carteira de exemplo
             </Link>
+            <Link href="/carteira" prefetch={false} className={NAV_LINK}>
+              Minha carteira
+            </Link>
             <Link href="/dados" className={NAV_LINK}>
               Ativos
             </Link>

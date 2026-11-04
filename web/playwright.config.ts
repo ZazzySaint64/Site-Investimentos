@@ -1,4 +1,8 @@
+import { existsSync } from "node:fs";
 import { defineConfig } from "@playwright/test";
+
+// The e2e users (python -m pipeline.e2e_users) are stored here.
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 // Local only for now: these tests read the real remote database.
 export default defineConfig({
