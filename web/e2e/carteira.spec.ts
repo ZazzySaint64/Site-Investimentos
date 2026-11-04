@@ -1,5 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { deleteEverything, launch, signIn, signOut, skipWithoutUsers } from "./session";
+
+async function settled(page: Page) {
+  await expect(page.getByRole("main").getByText("O que os números dizem")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+}
 
 test.describe.configure({ mode: "serial" });
 
@@ -125,12 +130,12 @@ test("the asset page shows the position only to whoever holds it", async ({ page
     await page.goto("/dados/ITUB4");
     await expect(heading(page)).toBeVisible();
     await page.goto("/dados/PETR4");
-    await expect(page.getByText("O que os números dizem")).toBeVisible();
+    await settled(page);
     await expect(heading(page)).toHaveCount(0);
 
     const anonymous = await context.newPage();
     await anonymous.goto("/dados/ITUB4");
-    await expect(anonymous.getByText("O que os números dizem")).toBeVisible();
+    await settled(anonymous);
     await expect(heading(anonymous)).toHaveCount(0);
   } finally {
     await context.close();
@@ -155,6 +160,7 @@ test("the next person in the same browser sees nothing from the previous one", a
     await expect(main.getByText("Sua carteira está vazia.")).toBeVisible();
     await expect(main.getByRole("link", { name: /Itaú/ })).toHaveCount(0);
     await page.goto("/dados/ITUB4");
+    await settled(page);
     await expect(page.getByRole("main").getByRole("heading", { name: "Sua posição" })).toHaveCount(0);
   } finally {
     await signOut(page);
@@ -203,5 +209,14 @@ test("the user pages fit a phone", async ({ page }) => {
   };
   await fits("/entrar"); // before signing in: a session redirects it to /carteira
   await signIn(page, "A");
-  for (const path of ["/carteira", "/carteira/lancar", "/questionario", "/conta"]) await fits(path);
+  try {
+    await deleteEverything(page);
+    for (const path of ["/carteira", "/carteira/lancar", "/questionario", "/conta"]) await fits(path);
+
+    await page.goto("/carteira/lancar");
+    await launch(page, { asset: "ITUB4", operation: "Compra", quantity: "10", price: "30", date: "2024-03-15" });
+    for (const path of ["/carteira", "/carteira/lancar", "/dados/ITUB4"]) await fits(path);
+  } finally {
+    await deleteEverything(page);
+  }
 });
