@@ -22,7 +22,7 @@ test("sign in reaches the wallet and sign out ends the session", async ({ page }
   const sessionCookies = (await page.context().cookies()).filter((c) => c.name.startsWith("sb-"));
   expect(sessionCookies.length).toBeGreaterThan(0);
   for (const cookie of sessionCookies) expect(cookie.httpOnly).toBe(true);
-  await page.getByRole("link", { name: "Conta" }).click();
+  await page.getByRole("link", { name: "Conta", exact: true }).click();
   await page.getByRole("button", { name: "Sair" }).click();
   await page.waitForURL((url) => url.pathname === "/");
   await page.goto("/carteira");

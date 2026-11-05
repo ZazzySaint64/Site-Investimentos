@@ -1,6 +1,8 @@
 # Conhecimento de investimentos para o Site Investimentos
 
-Pesquisa feita em 2026-11-04. É a base para aplicar estes conceitos no sistema em fases futuras. Nada aqui foi implementado.
+Pesquisa feita em 2026-11-04. É a base para aplicar estes conceitos no sistema.
+
+**Aplicado em 2026-11-05:** glossário (seção 11.3), bloco "O que este fundo tem" na página de cada FII (itens 2 a 5 da seção 11.1), proventos de 12 meses nas ações e a página `/renda-fixa`, com a conta isento contra tributado e a simulação de marcação a mercado. A regra de composição foi testada nos 28 FIIs do catálogo que a CVM identifica. Uma checagem esconde vacância que não combina com a receita, porque o HSML11 envia ocupação nesse campo. Ficam para depois: IFIX (item 6), indicadores de ações pelos dados da CVM (item 7) e os diagramas da seção 11.2.
 
 Este documento é material técnico e educativo. Ele não é recomendação de investimento nem parecer jurídico ou tributário.
 

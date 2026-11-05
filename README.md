@@ -20,9 +20,10 @@ Todas as noites, às 02:30 UTC, o job no GitHub Actions atualiza preços, série
 
 | Fonte | Dados |
 |---|---|
-| Yahoo Finance, via `yfinance` | Ações e fundos imobiliários do Brasil e o Ibovespa |
+| Yahoo Finance, via `yfinance` | Ações e fundos imobiliários do Brasil, seus proventos e o Ibovespa |
 | [API SGS do Banco Central](https://dadosabertos.bcb.gov.br/) | Selic, CDI e IPCA |
 | [Tesouro Transparente](https://www.tesourotransparente.gov.br/) | Preços do Tesouro Direto |
+| [Dados abertos da CVM](https://dados.cvm.gov.br/) | Informes mensal e trimestral dos fundos imobiliários: composição, valor patrimonial, cotistas, vacância e contratos |
 
 Os catálogos de ações e fundos seguem as maiores participações do Ibovespa e do IFIX publicadas pela B3.
 
