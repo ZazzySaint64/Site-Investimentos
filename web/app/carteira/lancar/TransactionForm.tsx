@@ -50,7 +50,7 @@ export function TransactionForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-bg disabled:opacity-60"
+        className="rounded-full bg-accent px-3 py-2 text-sm font-medium text-bg disabled:opacity-60"
       >
         Salvar lançamento
       </button>

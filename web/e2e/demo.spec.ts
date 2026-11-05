@@ -25,3 +25,13 @@ test("an unknown persona shows the not found page", async ({ page }) => {
   expect(response?.status()).toBe(404);
   await expect(page.getByText("Página não encontrada")).toBeVisible();
 });
+
+test("the home page swaps the sheet and its sentence when another investment is picked", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("article", { name: "Ficha de Petrobras PN" })).toBeVisible();
+  await page.getByRole("button", { name: "Um fundo imobiliário" }).click();
+  await expect(page.getByRole("article", { name: "Ficha de Petrobras PN" })).toBeHidden();
+  const sheet = page.getByRole("article", { name: /^Ficha de / });
+  await expect(sheet.getByRole("link", { name: "Ver a página completa" })).toHaveAttribute("href", /HGLG11/);
+  await expect(sheet.getByText(/por ano em até 5 anos/)).toBeVisible();
+});

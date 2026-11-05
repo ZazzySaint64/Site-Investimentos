@@ -10,7 +10,7 @@ export default async function NovaSenhaPage() {
   await requireUser();
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Nova senha</h1>
+      <h1>Nova senha</h1>
       <NewPasswordForm />
     </main>
   );

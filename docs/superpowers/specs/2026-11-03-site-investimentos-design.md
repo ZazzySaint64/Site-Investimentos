@@ -31,7 +31,7 @@ Alertas, notícias, imposto de renda, importação da B3, Open Finance, provento
 | Arquitetura | Jobs Python noturnos gravam no banco; o site só lê do banco |
 | Stack | Next.js, TypeScript, Tailwind, Recharts, Supabase, Python, GitHub Actions, Vercel |
 | Modelo de IA | Groq, plano gratuito |
-| Visual | "Terminal calmo": escuro e denso, com frase simples sob cada número |
+| Visual | "Herbário": verde-floresta, lima e fundo claro, com pranchas botânicas antigas e uma frase simples sob cada número |
 | Autoria | Claude constrói o site, sob direção do autor. O autor decide, testa e configura os painéis |
 | Custo e prazo | Custo zero, sem data limite |
 | Idioma | Interface em português do Brasil; README em português e inglês |

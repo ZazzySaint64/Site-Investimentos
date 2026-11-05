@@ -7,7 +7,7 @@ function Figure({ label, value }: { label: React.ReactNode; value: string }) {
   return (
     <div>
       <p className="text-xs text-muted">{label}</p>
-      <p className="mt-1 font-mono text-xl">{value}</p>
+      <p className="mt-1 tabular-nums text-xl">{value}</p>
     </div>
   );
 }

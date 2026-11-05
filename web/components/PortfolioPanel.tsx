@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Term } from "@/components/Term";
+import { CLASS_PLATES } from "@/lib/plates";
 import type { Portfolio } from "@/lib/portfolio";
 import {
   CLASS_LABELS,
@@ -22,7 +24,7 @@ export const PROFILE_LABELS: Record<string, string> = {
 };
 const HEADER_CELL = "px-2 py-3 text-right font-medium sm:px-4";
 const WIDE_HEADER_CELL = `${HEADER_CELL} hidden lg:table-cell`;
-const WIDE_CELL = "hidden px-4 py-3 text-right font-mono lg:table-cell";
+const WIDE_CELL = "hidden px-4 py-3 text-right tabular-nums lg:table-cell";
 
 /** The three figures, the note under them and the missing-price warning. */
 export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; note: string }) {
@@ -31,7 +33,7 @@ export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; no
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-muted">Valor hoje</p>
-          <p className="mt-1 font-mono text-2xl">{formatMoney(portfolio.value)}</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{formatMoney(portfolio.value)}</p>
           <p className="mt-1 text-sm text-text-soft">
             Quanto a carteira valeria pelos preços mais recentes.
           </p>
@@ -40,15 +42,15 @@ export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; no
           <p className="text-xs text-muted">
             <Term name="resultado">Resultado</Term>
           </p>
-          <p className="mt-1 font-mono text-2xl">{formatSignedMoney(portfolio.result)}</p>
-          <p className="font-mono text-sm text-text-soft">
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{formatSignedMoney(portfolio.result)}</p>
+          <p className="tabular-nums text-sm text-text-soft">
             {formatSignedPercent(portfolio.resultShare)} sobre o total comprado
           </p>
           <p className="mt-1 text-sm text-text-soft">{resultPhrase(portfolio.result)}</p>
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-muted">Quanto está investido</p>
-          <p className="mt-1 font-mono text-2xl">{formatMoney(portfolio.invested)}</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums">{formatMoney(portfolio.invested)}</p>
           <p className="mt-1 text-sm text-text-soft">
             Quanto foi pago pelo que continua na carteira.
           </p>
@@ -68,21 +70,35 @@ export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; no
 export function AllocationList({ portfolio }: { portfolio: Portfolio }) {
   return (
     <section aria-labelledby="alocacao" className="space-y-3">
-      <h2 id="alocacao" className="text-sm font-medium text-muted">
+      <h2 id="alocacao" className="text-2xl">
         Onde o dinheiro está (<Term name="alocacao">alocação</Term>)
       </h2>
       <ul className="space-y-3 rounded-lg border border-border bg-surface p-4">
-        {portfolio.allocation.map((item) => (
-          <li key={item.assetClass} className="grid gap-1 text-sm sm:grid-cols-[11rem_1fr_9rem] sm:items-center sm:gap-3">
-            <span>{CLASS_LABELS[item.assetClass] ?? item.assetClass}</span>
+        {portfolio.allocation.map((item) => {
+          const plate = CLASS_PLATES[item.assetClass];
+          return (
+          <li key={item.assetClass} className="grid gap-1 text-sm sm:grid-cols-[14rem_1fr_9rem] sm:items-center sm:gap-3">
+            <span className="flex items-center gap-3">
+              {plate && (
+                <Image
+                  src={plate.src}
+                  width={96}
+                  height={96}
+                  alt=""
+                  className="size-12 rounded-full object-cover object-[50%_35%]"
+                />
+              )}
+              {CLASS_LABELS[item.assetClass] ?? item.assetClass}
+            </span>
             <span className="h-2 rounded-full bg-border">
               <span className="block h-2 rounded-full bg-accent" style={{ width: `${item.share * 100}%` }} />
             </span>
-            <span className="font-mono text-text-soft sm:text-right">
+            <span className="tabular-nums text-text-soft sm:text-right">
               {formatPercent(item.share)} · {formatMoney(item.value)}
             </span>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </section>
   );
@@ -92,7 +108,7 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
   const today = todayInBrazil();
   return (
     <section aria-labelledby="posicoes" className="space-y-3">
-      <h2 id="posicoes" className="text-sm font-medium text-muted">
+      <h2 id="posicoes" className="text-2xl">
         O que tem na carteira
       </h2>
       <p className="text-xs text-muted">
@@ -146,7 +162,7 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
                     <span className="block text-xs text-muted">
                       {CLASS_LABELS[position.assetClass] ?? position.assetClass}
                       {position.assetClass !== "tesouro" && !fixed && (
-                        <span className="font-mono"> · {position.ticker}</span>
+                        <span className="tabular-nums"> · {position.ticker}</span>
                       )}
                     </span>
                     {note && <span className="block text-xs text-text-soft">{note}</span>}
@@ -167,8 +183,8 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
                   <td className={WIDE_CELL}>{formatQuantity(position.quantity)}</td>
                   <td className={WIDE_CELL}>{formatMoney(position.averageCost)}</td>
                   <td className={WIDE_CELL}>{formatMoney(position.price)}</td>
-                  <td className="px-2 py-3 text-right font-mono sm:px-4">{formatMoney(position.value)}</td>
-                  <td className="px-2 py-3 text-right font-mono sm:px-4">
+                  <td className="px-2 py-3 text-right tabular-nums sm:px-4">{formatMoney(position.value)}</td>
+                  <td className="px-2 py-3 text-right tabular-nums sm:px-4">
                     {formatSignedMoney(position.result)}
                   </td>
                   <td className={WIDE_CELL}>{formatPercent(position.share)}</td>

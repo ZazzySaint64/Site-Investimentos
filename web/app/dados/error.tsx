@@ -3,7 +3,7 @@
 export default function DataError({ retry }: { retry: () => void }) {
   return (
     <main className="mx-auto max-w-2xl space-y-3 px-4 py-16">
-      <h1 className="text-xl font-semibold">Não foi possível carregar os dados</h1>
+      <h1>Não foi possível carregar os dados</h1>
       <p className="text-sm text-text-soft">O banco de dados não respondeu. Tente de novo.</p>
       <button
         type="button"

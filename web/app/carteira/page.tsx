@@ -21,9 +21,9 @@ export default async function CarteiraPage() {
   const empty = transactions.length === 0 && fixedIncome.length === 0;
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+    <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
       <header className="space-y-3">
-        <h1 className="text-2xl font-semibold">Minha carteira</h1>
+        <h1>Minha carteira</h1>
         <nav aria-label="Ações da carteira" className="flex gap-4">
           <Link href="/carteira/lancar" className={LINK}>
             Lançar

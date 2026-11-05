@@ -7,7 +7,7 @@ export default function GlossaryPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-4 py-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">Glossário</h1>
+        <h1>Glossário</h1>
         <p className="text-sm text-text-soft">Os termos usados no site, em palavras simples.</p>
       </header>
       <dl className="divide-y divide-border rounded-lg border border-border bg-surface">

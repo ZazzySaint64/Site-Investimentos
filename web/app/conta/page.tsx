@@ -10,9 +10,9 @@ export default async function ContaPage() {
   const user = await requireUser();
   return (
     <main className="mx-auto max-w-md space-y-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Conta</h1>
+      <h1>Conta</h1>
       <p className="text-sm text-text-soft">
-        E-mail: <span className="font-mono">{user.email}</span>
+        E-mail: <span className="tabular-nums">{user.email}</span>
       </p>
       <SignOutForm />
       <details className="rounded-lg border border-border bg-surface p-4">

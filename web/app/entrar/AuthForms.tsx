@@ -14,7 +14,7 @@ type State = { message: string; email?: string } | null;
 type FormAction = (state: State, formData: FormData) => Promise<State>;
 
 const INPUT = "w-full rounded-md border border-border bg-surface px-3 py-2 text-sm";
-const BUTTON = "rounded-md bg-accent px-3 py-2 text-sm font-medium text-bg";
+const BUTTON = "rounded-full bg-accent px-3 py-2 text-sm font-medium text-bg";
 
 function Field({
   label,

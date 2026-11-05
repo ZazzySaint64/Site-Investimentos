@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PLATES } from "@/lib/plates";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { SignInForm, SignUpForm } from "./AuthForms";
 
@@ -23,8 +25,9 @@ export default async function EntrarPage({ searchParams }: Props) {
   const notice = aviso && Object.hasOwn(NOTICES, aviso) ? NOTICES[aviso] : undefined;
 
   return (
-    <main className="mx-auto max-w-md space-y-6 px-4 py-10">
-      <h1 className="text-2xl font-semibold">Entrar</h1>
+    <main className="mx-auto grid max-w-6xl gap-10 px-4 py-10 sm:px-8 lg:grid-cols-2 lg:items-start lg:py-16">
+      <div className="mx-auto w-full max-w-md space-y-6">
+      <h1>Entrar</h1>
       {notice && (
         <p role="status" className="rounded-lg border border-accent/60 px-4 py-3 text-sm">
           {notice}
@@ -42,6 +45,19 @@ export default async function EntrarPage({ searchParams }: Props) {
           <SignUpForm />
         </div>
       </details>
+      </div>
+      <aside className="on-forest overflow-hidden rounded-lg bg-forest p-6 text-mist sm:p-10">
+        <p className="font-display text-3xl leading-tight">Sua carteira, só sua.</p>
+        <p className="mt-2">Cada pessoa vê apenas os próprios dados.</p>
+        <Image
+          src={PLATES.baunilha.src}
+          width={PLATES.baunilha.width}
+          height={PLATES.baunilha.height}
+          sizes="(min-width: 1024px) 40vw, 90vw"
+          alt="Prancha botânica antiga de baunilha, com folhas e flores."
+          className="mt-8 aspect-[4/3] w-full rounded-t-full object-cover object-top"
+        />
+      </aside>
     </main>
   );
 }

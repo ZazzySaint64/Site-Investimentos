@@ -119,10 +119,10 @@ test("fixed income appears without a link to an asset page", async ({ page }) =>
   }
 });
 
-test("the asset page shows the position only to whoever holds it", async ({ page, browser }) => {
+test("the asset page shows the position only to whoever holds it", async ({ page, browser, baseURL }) => {
   skipWithoutUsers();
   await signIn(page, "A");
-  const context = await browser.newContext({ baseURL: "http://localhost:3000" });
+  const context = await browser.newContext({ baseURL });
   try {
     await page.goto("/carteira/lancar");
     await launch(page, { asset: "ITUB4", operation: "Compra", quantity: "10", price: "30", date: "2024-03-15" });
@@ -172,10 +172,10 @@ test("the next person in the same browser sees nothing from the previous one", a
   }
 });
 
-test("two people at the same time get their own wallets", async ({ browser }) => {
+test("two people at the same time get their own wallets", async ({ browser, baseURL }) => {
   skipWithoutUsers();
-  const contextA = await browser.newContext({ baseURL: "http://localhost:3000" });
-  const contextB = await browser.newContext({ baseURL: "http://localhost:3000" });
+  const contextA = await browser.newContext({ baseURL });
+  const contextB = await browser.newContext({ baseURL });
   const pageA = await contextA.newPage();
   const pageB = await contextB.newPage();
   try {

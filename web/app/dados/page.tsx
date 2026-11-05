@@ -32,7 +32,7 @@ function MacroCard({
   return (
     <div className="rounded-lg border border-border bg-surface p-4">
       <p className="text-xs text-muted">{label}</p>
-      <p className="mt-1 font-mono text-2xl">{value}</p>
+      <p className="mt-1 tabular-nums text-2xl">{value}</p>
       <p className="mt-1 text-sm text-text-soft">{phrase}</p>
       <p className="mt-1 text-xs text-muted">{note}</p>
     </div>
@@ -69,9 +69,9 @@ export default async function DataPage() {
   const latestIpca = macro.ipca[0];
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+    <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">Ativos</h1>
+        <h1>Ativos</h1>
         <p className="text-sm text-text-soft">
           Veja como cada investimento se comportou e clique em um deles para entender melhor. Toque
           nas palavras sublinhadas para ver o que significam.
@@ -122,7 +122,7 @@ export default async function DataPage() {
         <ul className="divide-y divide-border rounded-lg border border-border bg-surface">
           {runs.map((run) => (
             <li key={run.id} className="grid gap-2 p-4 text-sm sm:grid-cols-[11rem_13rem_1fr]">
-              <span className="font-mono text-text-soft">{formatDateTime(run.started_at)}</span>
+              <span className="tabular-nums text-text-soft">{formatDateTime(run.started_at)}</span>
               <span>{statusLabel(run.status)}</span>
               <RunDetails run={run} />
             </li>

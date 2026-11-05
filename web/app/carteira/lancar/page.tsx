@@ -27,7 +27,7 @@ export default async function LancarPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-8 px-4 py-8">
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">Lançar</h1>
+        <h1>Lançar</h1>
         <p className="text-sm text-text-soft">
           A quantidade e o preço são os da data da operação. Desdobramentos posteriores são
           corrigidos automaticamente.
@@ -61,12 +61,12 @@ export default async function LancarPage() {
           <ul className="divide-y divide-border text-sm">
             {transactions.map((transaction) => (
               <li key={transaction.id} className="py-2">
-                <span className="font-mono text-text-soft">{formatDate(transaction.date)}</span>
+                <span className="tabular-nums text-text-soft">{formatDate(transaction.date)}</span>
                 {" · "}
                 {transaction.type === "buy" ? "Compra" : "Venda"} de{" "}
-                <span className="font-mono">{formatQuantity(transaction.quantity)}</span>{" "}
+                <span className="tabular-nums">{formatQuantity(transaction.quantity)}</span>{" "}
                 {transaction.asset.name} a{" "}
-                <span className="font-mono">{formatMoney(transaction.price)}</span>
+                <span className="tabular-nums">{formatMoney(transaction.price)}</span>
                 {hasLaterSplit(transaction) && (
                   <span className="block text-xs text-muted">
                     Depois houve <Term name="desdobramento">desdobramento ou grupamento</Term>. Por
@@ -91,10 +91,10 @@ export default async function LancarPage() {
           <ul className="divide-y divide-border text-sm">
             {fixedIncome.map((item) => (
               <li key={item.id} className="py-2">
-                <span className="font-mono text-text-soft">{formatDate(item.start_date)}</span>
+                <span className="tabular-nums text-text-soft">{formatDate(item.start_date)}</span>
                 {" · "}
-                {item.name}: <span className="font-mono">{formatMoney(item.principal)}</span> a{" "}
-                <span className="font-mono">{formatQuantity(item.cdi_pct)}%</span> do CDI
+                {item.name}: <span className="tabular-nums">{formatMoney(item.principal)}</span> a{" "}
+                <span className="tabular-nums">{formatQuantity(item.cdi_pct)}%</span> do CDI
                 {item.maturity && <>, vencimento em {formatDate(item.maturity)}</>}
                 {item.daily_liquidity && <>, com liquidez diária</>}
                 <DeleteButton

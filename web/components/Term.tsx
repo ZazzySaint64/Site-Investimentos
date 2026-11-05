@@ -21,7 +21,7 @@ export function Term({ name, children }: { name: GlossaryKey; children: React.Re
       <span
         id={id}
         popover="auto"
-        className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-lg border border-border bg-surface p-5 text-left font-sans text-text backdrop:bg-black/60"
+        className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-lg border border-border bg-surface p-5 text-left font-sans text-text backdrop:bg-forest/60"
       >
         <span className="block text-base font-semibold">{title}</span>
         <span className="mt-2 block text-sm font-normal leading-relaxed text-text-soft">{text}</span>

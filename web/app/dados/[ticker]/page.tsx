@@ -60,7 +60,7 @@ function Metric({
       <p className="text-xs text-muted">
         <Term name={term}>{label}</Term>
       </p>
-      <p className="mt-1 font-mono text-2xl">{value}</p>
+      <p className="mt-1 text-3xl font-semibold tabular-nums">{value}</p>
       <p className="mt-1 text-sm text-text-soft">{phrase}</p>
     </div>
   );
@@ -86,15 +86,15 @@ export default async function AssetDataPage({ params }: Props) {
   const classInfo = CLASS_TERMS[asset.class];
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+    <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
       <header className="space-y-2">
         <Link href="/dados" className="text-sm text-accent underline-offset-2 hover:underline">
           ← Todos os ativos
         </Link>
-        <h1 className="text-2xl font-semibold">{asset.name}</h1>
+        <h1>{asset.name}</h1>
         <p className="text-sm text-text-soft">
           <Term name={classInfo.term}>{classInfo.label}</Term>
-          {asset.class !== "tesouro" && <span className="font-mono"> · {asset.ticker}</span>}
+          {asset.class !== "tesouro" && <span className="tabular-nums"> · {asset.ticker}</span>}
           {asset.sector && ` · ${asset.sector}`}
           {asset.maturity && ` · Vence em ${formatDate(asset.maturity)}`}
         </p>
@@ -115,7 +115,7 @@ export default async function AssetDataPage({ params }: Props) {
           </h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="font-mono text-3xl text-accent">{formatMoney(growth.asset)}</p>
+              <p className="tabular-nums text-3xl text-accent">{formatMoney(growth.asset)}</p>
               <p className="mt-1 text-sm text-text-soft">
                 {isTesouro ? (
                   "hoje, neste título"
@@ -128,7 +128,7 @@ export default async function AssetDataPage({ params }: Props) {
             </div>
             {growth.cdi !== null && (
               <div>
-                <p className="font-mono text-3xl">{formatMoney(growth.cdi)}</p>
+                <p className="tabular-nums text-3xl">{formatMoney(growth.cdi)}</p>
                 <p className="mt-1 text-sm text-text-soft">
                   hoje, rendendo 100% do <Term name="cdi">CDI</Term>
                 </p>
@@ -208,7 +208,7 @@ export default async function AssetDataPage({ params }: Props) {
                 </th>
               </tr>
             </thead>
-            <tbody className="font-mono">
+            <tbody className="tabular-nums">
               {prices
                 .slice(-10)
                 .reverse()

@@ -109,25 +109,25 @@ export function AssetTable({ assets }: { assets: AssetRow[] }) {
                     <span className="block text-xs text-muted">
                       {CLASS_LABELS[asset.class]}
                       {asset.class !== "tesouro" && (
-                        <span className="font-mono"> · {asset.ticker}</span>
+                        <span className="tabular-nums"> · {asset.ticker}</span>
                       )}
                     </span>
                   </td>
-                  <td className="hidden px-4 py-3 text-right font-mono sm:table-cell">
+                  <td className="hidden px-4 py-3 text-right tabular-nums sm:table-cell">
                     {asset.class === "indice"
                       ? (close?.toLocaleString("pt-BR") ?? "—")
                       : formatMoney(close)}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono">
+                  <td className="px-4 py-3 text-right tabular-nums">
                     {formatSignedPercent(stats?.return_annual ?? null)}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span>{riskLabel(volatility)}</span>
-                    <span className="block font-mono text-xs text-muted">
+                    <span className="block tabular-nums text-xs text-muted">
                       {volatility === null ? "" : formatPercent(volatility)}
                     </span>
                   </td>
-                  <td className="hidden px-4 py-3 text-right font-mono sm:table-cell">
+                  <td className="hidden px-4 py-3 text-right tabular-nums sm:table-cell">
                     {formatSignedPercent(stats?.max_drawdown ?? null)}
                   </td>
                 </tr>

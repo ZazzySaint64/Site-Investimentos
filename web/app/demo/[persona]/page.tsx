@@ -28,7 +28,7 @@ export default async function DemoPage({ params }: Props) {
   const portfolio = computePortfolio(transactions);
 
   return (
-    <main className="mx-auto max-w-6xl space-y-8 px-4 py-8">
+    <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
       <p className="rounded-lg border border-accent/60 px-4 py-3 text-sm">
         <strong className="font-semibold text-accent">Exemplo com carteira fictícia</strong>
         <span className="block text-text-soft sm:ml-2 sm:inline">
@@ -37,7 +37,7 @@ export default async function DemoPage({ params }: Props) {
       </p>
 
       <header className="space-y-3">
-        <h1 className="text-2xl font-semibold">
+        <h1>
           <Term name="carteira">Carteira</Term> de {persona.name}
         </h1>
         <nav aria-label="Carteiras de exemplo" className="flex flex-wrap gap-2">
@@ -74,12 +74,12 @@ export default async function DemoPage({ params }: Props) {
         <ul className="mt-2 divide-y divide-border">
           {transactions.map((transaction) => (
             <li key={transaction.id} className="py-2">
-              <span className="font-mono text-text-soft">{formatDate(transaction.date)}</span>
+              <span className="tabular-nums text-text-soft">{formatDate(transaction.date)}</span>
               {" · "}
               {transaction.type === "buy" ? "Compra" : "Venda"} de{" "}
-              <span className="font-mono">{formatQuantity(transaction.quantity)}</span>{" "}
+              <span className="tabular-nums">{formatQuantity(transaction.quantity)}</span>{" "}
               {transaction.asset.name} a{" "}
-              <span className="font-mono">{formatMoney(transaction.price)}</span>
+              <span className="tabular-nums">{formatMoney(transaction.price)}</span>
               {hasLaterSplit(transaction) && (
                 <span className="block text-xs text-muted">
                   Depois houve <Term name="desdobramento">desdobramento ou grupamento</Term>. Por

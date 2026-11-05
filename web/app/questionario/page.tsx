@@ -10,7 +10,7 @@ export default async function QuestionarioPage() {
   const profile = await getProfile();
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-4 py-8">
-      <h1 className="text-2xl font-semibold">Meu perfil de investidor</h1>
+      <h1>Meu perfil de investidor</h1>
       <QuestionnaireForm saved={profile} />
     </main>
   );
