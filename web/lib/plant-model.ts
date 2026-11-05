@@ -27,6 +27,8 @@ export type Leaf = {
   drift: number;
   phase: number;
   kind: number | null;
+  /** A leaf of the young stem: it fades where it is, instead of falling. */
+  sprout?: boolean;
 };
 
 /** A mass of shade inside the crown, behind the leaves. It is what makes the crown look full. */
@@ -37,6 +39,8 @@ export type Plant = { branches: Branch[]; roots: Branch[]; leaves: Leaf[]; folia
 export const PLANT_HEIGHT = 96;
 export const DRY_START = 0.66;
 export const DRY_END = 0.8;
+export const SPROUT_FADE_START = 0.64;
+export const SPROUT_FADE = 0.08;
 
 const TO_RADIANS = Math.PI / 180;
 
@@ -205,12 +209,13 @@ export function generatePlant(seed = 2026): Plant {
       size: 5.4,
       hue: side > 0 ? 0 : 1,
       born: Math.max(0.27 + at * 0.28, reachedAt(trunk, index) + AFTER_TIP),
-      // The sprout's leaves go once the crown has formed: a trunk does not keep them.
-      fall: between(0.62, 0.7),
+      // Still there on the Galhos stage; faded out before the dry season, as the crown forms.
+      fall: between(SPROUT_FADE_START, SPROUT_FADE_START + 0.03),
       regrow: 2,
       drift: side * 10,
       phase: random() * Math.PI * 2,
       kind: null,
+      sprout: true,
     });
   }
 

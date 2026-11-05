@@ -2,7 +2,7 @@
 
 import { useMotionValueEvent, type MotionValue } from "motion/react";
 import { useEffect, useMemo, useRef } from "react";
-import { DRY_END, DRY_START, generatePlant, PLANT_HEIGHT, type Branch } from "@/lib/plant-model";
+import { DRY_END, DRY_START, generatePlant, PLANT_HEIGHT, SPROUT_FADE, type Branch } from "@/lib/plant-model";
 
 const TO_RADIANS = Math.PI / 180;
 const SOIL = "#0b2420";
@@ -398,7 +398,10 @@ export function PlantCanvas({
         const color = rampAt(LEAF_RAMPS[leaf.hue], toOchre);
         const fading = selected === null ? 1 : dim ? 0.28 : 1;
 
-        if (p < leaf.fall) {
+        if (leaf.sprout) {
+          const left = 1 - smooth((p - leaf.fall) / SPROUT_FADE);
+          if (left > 0) drawLeaf(ctx!, scale, baseX, baseY, -leaf.angle + flutter, size * smooth(opened), color, fading * left);
+        } else if (p < leaf.fall) {
           drawLeaf(ctx!, scale, baseX, baseY, -leaf.angle + flutter, size * smooth(opened), color, fading);
         } else {
           const fall = clamp01((p - leaf.fall) / 0.09);
