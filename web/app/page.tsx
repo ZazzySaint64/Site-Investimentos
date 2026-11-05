@@ -3,12 +3,13 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
-import { getAssets, getDemoPersonas, getDemoTransactions, type AssetRow } from "@/lib/data";
+import { getAssets, getDemoPersonas, getDemoTransactions, getPrices, type AssetRow } from "@/lib/data";
 import type { GlossaryKey } from "@/lib/glossary";
 import {
   CLASS_LABELS,
   drawdownPhrase,
   formatMoney,
+  formatMonthYear,
   formatPercent,
   formatSignedPercent,
   resultPhrase,
@@ -16,6 +17,7 @@ import {
   volatilityPhrase,
 } from "@/lib/phrases";
 import { computePortfolio } from "@/lib/portfolio";
+import { lastYears, linePoints, type PricePoint } from "@/lib/price-line";
 import { SpecimenPicker } from "./SpecimenPicker";
 
 const PLACES = [
@@ -68,7 +70,7 @@ const SLIP = [
 const KINDS: { assetClass: string; preferred: string; label: string; term: GlossaryKey; kind: string }[] = [
   { assetClass: "acao_br", preferred: "PETR4", label: "Uma ação", term: "acao", kind: "Ação" },
   { assetClass: "fii", preferred: "HGLG11", label: "Um fundo imobiliário", term: "fii", kind: "Fundo imobiliário" },
-  { assetClass: "tesouro", preferred: "", label: "Um título do Tesouro", term: "tesouro", kind: "Tesouro Direto" },
+  { assetClass: "tesouro", preferred: "TD-IPCA-20350515", label: "Um título do Tesouro", term: "tesouro", kind: "Tesouro Direto" },
 ];
 
 function SheetRow({
@@ -95,7 +97,42 @@ function SheetRow({
   );
 }
 
-function Sheet({ asset, kind }: { asset: AssetRow; kind: (typeof KINDS)[number] }) {
+/** The evidence beside the numbers: how the price really moved in the period they describe. */
+function PriceLine({ prices, name, withProventos }: { prices: PricePoint[]; name: string; withProventos: boolean }) {
+  const first = prices[0];
+  const last = prices.at(-1);
+  if (!first || !last || prices.length < 2) return null;
+  const from = `${formatMoney(first.close)} em ${formatMonthYear(first.date)}`;
+  const to = `${formatMoney(last.close)} em ${formatMonthYear(last.date)}`;
+  return (
+    <figure className="space-y-2">
+      <svg
+        viewBox="0 0 600 96"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={`Preço de ${name}: de ${from} para ${to}.`}
+        className="h-24 w-full overflow-visible"
+      >
+        <polyline
+          points={linePoints(prices.map((point) => point.close), 600, 96)}
+          fill="none"
+          stroke="var(--color-accent)"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <figcaption className="flex flex-wrap justify-between gap-x-4 text-sm tabular-nums text-text-soft">
+        <span>{from}</span>
+        <span>{to}</span>
+      </figcaption>
+      <p className="text-sm text-muted">
+        Preço de fechamento{withProventos ? ", sem contar proventos" : ""}.
+      </p>
+    </figure>
+  );
+}
+
+function Sheet({ asset, kind, prices }: { asset: AssetRow; kind: (typeof KINDS)[number]; prices: PricePoint[] }) {
   const stats = asset.asset_stats;
   const annual = stats?.return_annual ?? null;
   const volatility = stats?.volatility ?? null;
@@ -108,6 +145,7 @@ function Sheet({ asset, kind }: { asset: AssetRow; kind: (typeof KINDS)[number] 
         </p>
         <h3 className="font-display mt-1 text-3xl leading-tight">{asset.name}</h3>
       </header>
+      <PriceLine prices={prices} name={asset.name} withProventos={asset.class !== "tesouro"} />
       <dl className="space-y-5">
         <SheetRow
           term="retorno"
@@ -185,13 +223,24 @@ async function Specimens() {
       </p>
     );
   }
-  const specimens = KINDS.flatMap((kind) => {
+  const chosen = KINDS.flatMap((kind) => {
     const ofClass = assets.filter((asset) => asset.class === kind.assetClass);
     const asset =
       ofClass.find((item) => item.ticker === kind.preferred) ??
       ofClass.find((item) => item.asset_stats?.return_annual != null);
-    return asset ? [{ key: kind.assetClass, label: kind.label, sheet: <Sheet asset={asset} kind={kind} /> }] : [];
+    return asset ? [{ kind, asset }] : [];
   });
+  const specimens = await Promise.all(
+    chosen.map(async ({ kind, asset }) => {
+      // Without prices the sheet still has its numbers and sentences.
+      const prices = await getPrices(asset.ticker).catch(() => []);
+      return {
+        key: kind.assetClass,
+        label: kind.label,
+        sheet: <Sheet asset={asset} kind={kind} prices={lastYears(prices)} />,
+      };
+    }),
+  );
   return <SpecimenPicker specimens={specimens} />;
 }
 
