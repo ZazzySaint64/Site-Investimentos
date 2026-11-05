@@ -143,7 +143,7 @@ const SHORT_YEARS = 2;
 function ShockChart({ years, rate, shift }: { years: number; rate: number; shift: number }) {
   const width = 320;
   const height = 170;
-  const pad = { left: 40, right: 12, top: 12, bottom: 30 };
+  const pad = { left: 40, right: 24, top: 12, bottom: 30 };
   const lines = [
     { years, color: "var(--color-forest)", label: `${number(years, 1)} anos` },
     { years: SHORT_YEARS, color: "#7fae6a", label: `${SHORT_YEARS} anos` },
@@ -165,7 +165,7 @@ function ShockChart({ years, rate, shift }: { years: number; rate: number; shift
         viewBox={`0 0 ${width} ${height}`}
         role="img"
         aria-label={`Variação do preço quando os juros mudam de −3 a +3 pontos. Em ${number(years, 1)} anos, vai de ${formatSignedPercent(priceChange(years, rate, 0.03))} a ${formatSignedPercent(priceChange(years, rate, -0.03))}. Em ${SHORT_YEARS} anos, de ${formatSignedPercent(priceChange(SHORT_YEARS, rate, 0.03))} a ${formatSignedPercent(priceChange(SHORT_YEARS, rate, -0.03))}.`}
-        className="w-full"
+        className="w-full max-w-lg"
       >
         <line
           x1={pad.left}
@@ -297,7 +297,7 @@ export function RateShockCalculator({
           )}
         </Field>
         <Field
-          label={`Os juros mudam: ${shift > 0 ? "+" : shift < 0 ? "−" : ""}${number(Math.abs(shift * 100))} pontos`}
+          label={`Os juros mudam: ${shift > 0 ? "+" : shift < 0 ? "−" : ""}${number(Math.abs(shift * 100))} ${Math.abs(shift) === 0.01 ? "ponto" : "pontos"}`}
         >
           {(id) => (
             <input
