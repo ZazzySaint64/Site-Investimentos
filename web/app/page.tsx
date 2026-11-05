@@ -18,6 +18,7 @@ import {
 } from "@/lib/phrases";
 import { computePortfolio } from "@/lib/portfolio";
 import { lastYears, linePoints, type PricePoint } from "@/lib/price-line";
+import { GrowthJourney } from "./GrowthJourney";
 import { SpecimenPicker } from "./SpecimenPicker";
 
 const PLACES = [
@@ -187,7 +188,7 @@ async function ExampleWallet() {
     <aside
       data-ui
       aria-label={`Exemplo: carteira de ${persona.name}`}
-      className="rise-on-load rise-on-load-2 space-y-4 rounded-lg bg-surface p-5 text-text sm:p-6"
+      className="space-y-4 rounded-lg bg-surface p-5 text-text sm:p-6"
     >
       <p className="text-sm text-muted">Carteira de {persona.name}, um exemplo fictício</p>
       <div>
@@ -253,28 +254,16 @@ async function AssetCount() {
 export default function Home() {
   return (
     <main>
-      <section className="overflow-hidden">
-        <div className="on-forest relative bg-forest text-mist lg:min-h-[max(56svh,27vw)] lg:pb-24">
-          <div className="mx-auto max-w-6xl px-4 pt-12 sm:px-8 sm:pt-20">
-            <h1 className="rise-on-load text-[11.4vw] leading-[0.95] sm:text-[7.2vw] 2xl:text-[7.75rem]">
-              Investir em
-              <br />
-              palavras simples
-            </h1>
-          </div>
-          <div className="relative z-10 mx-auto mt-8 -mb-12 max-w-md px-4 sm:px-8 lg:absolute lg:right-[max(2rem,calc((100vw-84rem)/2+2rem))] lg:-bottom-[5vw] lg:m-0 lg:w-[28vw] lg:max-w-none lg:px-0 2xl:w-[26rem]">
-            <Suspense fallback={<div className="h-80 rounded-lg bg-forest-soft/20" />}>
-              <ExampleWallet />
-            </Suspense>
-          </div>
-        </div>
-        <div className="bg-lime text-forest">
-          <div className="mx-auto max-w-6xl space-y-4 px-4 pt-20 pb-8 sm:px-8 lg:pt-6 lg:pr-[38vw]">
-            <p className="rise-on-load rise-on-load-2 max-w-[44ch] text-lg leading-snug sm:text-xl">
+      <GrowthJourney />
+
+      <section aria-label="Comece por aqui" className="bg-lime text-forest">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-12 lg:items-center lg:py-14">
+          <div className="space-y-4 lg:col-span-7">
+            <p className="max-w-[44ch] text-lg leading-snug sm:text-xl">
               Veja como cada investimento se comportou e o que os números querem dizer, com dados
               públicos e sem jargão.
             </p>
-            <div className="rise-on-load rise-on-load-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <Link
                 href="/demo/ana"
                 className="rounded-full bg-forest px-5 py-3 font-semibold text-lime hover:bg-accent"
@@ -294,6 +283,11 @@ export default function Home() {
               </Suspense>
               <DataDate />
             </div>
+          </div>
+          <div className="min-w-0 lg:col-span-5">
+            <Suspense fallback={<div className="h-80 rounded-lg bg-forest/10" />}>
+              <ExampleWallet />
+            </Suspense>
           </div>
         </div>
       </section>

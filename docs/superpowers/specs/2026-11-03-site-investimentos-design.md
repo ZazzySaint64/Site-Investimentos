@@ -31,7 +31,7 @@ Alertas, notícias, imposto de renda, importação da B3, Open Finance, provento
 | Arquitetura | Jobs Python noturnos gravam no banco; o site só lê do banco |
 | Stack | Next.js, TypeScript, Tailwind, Recharts, Supabase, Python, GitHub Actions, Vercel |
 | Modelo de IA | Groq, plano gratuito |
-| Visual | Verde-floresta, lima e fundo claro, com uma frase simples sob cada número. Imagem só entra quando traz informação; o site mostra os próprios dados |
+| Visual | Verde-floresta, lima e fundo claro, com uma frase simples sob cada número. Imagem só entra quando traz informação; o site mostra os próprios dados. A exceção é a planta animada do início, pedida pelo autor, que representa as etapas de crescimento ao investir |
 | Autoria | Claude constrói o site, sob direção do autor. O autor decide, testa e configura os painéis |
 | Custo e prazo | Custo zero, sem data limite |
 | Idioma | Interface em português do Brasil; README em português e inglês |
