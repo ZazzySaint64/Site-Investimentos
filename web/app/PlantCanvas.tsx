@@ -182,10 +182,10 @@ const STONES = backdrop(3.1, 90);
 const GRASS = backdrop(5.7, 160);
 const DOTS = backdrop(9.3, 60);
 
-function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: number, dry: number) {
+/** The sky, hills and soil stay still. Only the moon crosses the sky, marking the time passing. */
+function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, dry: number) {
   const { width, height, groundY, time, p } = scene;
 
-  // The sun crosses the sky along the whole journey: it marks the time passing.
   const sunX = width * (scene.wide ? 0.56 + p * 0.38 : 0.12 + p * 0.76);
   const sunY = groundY * (0.62 - Math.sin(p * Math.PI) * 0.46);
   ctx.fillStyle = dry > 0.5 ? "rgba(201,164,92,0.5)" : "rgba(227,232,225,0.13)";
@@ -200,13 +200,12 @@ function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: num
   }
 
   HILLS.forEach((color, layer) => {
-    const shift = travel * (0.12 + layer * 0.16);
     const base = groundY - (layer === 0 ? height * 0.16 : height * 0.08);
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(0, groundY);
     for (let x = 0; x <= width + 24; x += 24) {
-      const w = x + shift;
+      const w = x;
       const hill =
         Math.sin(w * 0.0031 + layer * 2.1) * height * 0.035 + Math.sin(w * 0.0083 + layer) * height * 0.012;
       ctx.lineTo(x, base + hill);
@@ -221,7 +220,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: num
   ctx.fillRect(0, groundY, width, height - groundY);
   ctx.fillStyle = "#10302a";
   for (let i = 0; i < STONES.length; i += 3) {
-    const x = ((STONES[i] * (width + 300) - travel) % (width + 300) + width + 300) % (width + 300) - 150;
+    const x = STONES[i] * (width + 300) - 150;
     const y = groundY + 18 + STONES[i + 1] * (height - groundY - 18);
     const size = 2 + STONES[i + 2] * 6;
     ctx.beginPath();
@@ -235,7 +234,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: num
   ctx.strokeStyle = rampAt(ramp([93, 158, 95], OCHRE), dry);
   ctx.beginPath();
   for (let i = 0; i < GRASS.length; i += 2) {
-    const x = ((GRASS[i] * (width + 300) - travel) % (width + 300) + width + 300) % (width + 300) - 150;
+    const x = GRASS[i] * (width + 300) - 150;
     const blade = 4 + GRASS[i + 1] * 9;
     const lean = Math.sin(time * 1.4 + x * 0.02) * 2.5;
     ctx.moveTo(x, groundY);
@@ -248,7 +247,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: num
   if (pollen > 0) {
     ctx.fillStyle = "#cbf751";
     for (let i = 0; i < DOTS.length; i += 2) {
-      const x = (DOTS[i] * width + Math.sin(time * 0.3 + i) * 26 - travel * 0.5 + width) % width;
+      const x = (DOTS[i] * width + Math.sin(time * 0.3 + i) * 26 + width) % width;
       const y = groundY * (0.15 + DOTS[i + 1] * 0.75) + Math.cos(time * 0.4 + i) * 18;
       ctx.globalAlpha = pollen * (0.25 + 0.3 * Math.abs(Math.sin(time + i)));
       ctx.beginPath();
@@ -312,7 +311,6 @@ export function PlantCanvas({
       const wide = cssWidth >= 1024;
       const groundY = cssHeight * (wide ? 0.78 : 0.38);
       const unit = (groundY - (wide ? 34 : 8)) / PLANT_HEIGHT;
-      const travel = p * cssWidth * 0.5;
       const zoom = interpolate(p, ZOOM_STOPS);
       const scene: Scene = {
         width: cssWidth,
@@ -320,7 +318,7 @@ export function PlantCanvas({
         wide,
         unit,
         groundY,
-        originX: (wide ? cssWidth * 0.74 : cssWidth * 0.5) - (wide ? p * cssWidth * 0.03 : 0),
+        originX: wide ? cssWidth * 0.74 : cssWidth * 0.5,
         zoom,
         time: seconds,
         p,
@@ -332,7 +330,7 @@ export function PlantCanvas({
       ctx!.setTransform(scale, 0, 0, scale, 0, 0);
       ctx!.globalAlpha = 1;
       ctx!.clearRect(0, 0, cssWidth, cssHeight);
-      drawBackground(ctx!, scene, travel, dry);
+      drawBackground(ctx!, scene, dry);
 
       // Roots first. Thin ones before thick ones, so joints stay hidden under the parent.
       for (let i = plant.roots.length - 1; i >= 0; i--) {
@@ -361,7 +359,7 @@ export function PlantCanvas({
         ctx!.fillStyle = color;
         ctx!.beginPath();
         for (const mass of plant.foliage) {
-          const radius = mass.radius * size * fullness * world;
+          const radius = mass.radius * size * fullness * smooth((p - mass.born) / 0.05) * world;
           const x = scene.originX + (mass.x + sway(scene, mass.x, mass.y) + lift) * world;
           const y = groundY - (mass.y + lift) * world;
           ctx!.moveTo(x + radius, y);

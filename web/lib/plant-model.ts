@@ -30,7 +30,7 @@ export type Leaf = {
 };
 
 /** A mass of shade inside the crown, behind the leaves. It is what makes the crown look full. */
-export type Foliage = { x: number; y: number; radius: number };
+export type Foliage = { x: number; y: number; radius: number; born: number };
 
 export type Plant = { branches: Branch[]; roots: Branch[]; leaves: Leaf[]; foliage: Foliage[] };
 
@@ -94,6 +94,15 @@ function headingAt(branch: Branch, index: number): number {
   return Math.atan2(branch.ys[i] - branch.ys[i - 1], branch.xs[i] - branch.xs[i - 1]) / TO_RADIANS;
 }
 
+/** When the growing tip passes a point of the branch: the inverse of the smoothstep that draws it. */
+export function reachedAt(branch: Branch, index: number): number {
+  const fraction = index / (branch.xs.length - 1);
+  return branch.born + branch.dur * (0.5 - Math.sin(Math.asin(1 - 2 * fraction) / 3));
+}
+
+// A leaf or a branch appears a moment after the tip has passed its point, never in the air ahead of it.
+const AFTER_TIP = 0.01;
+
 export function generatePlant(seed = 2026): Plant {
   const random = randomFrom(seed);
   const between = (low: number, high: number) => low + random() * (high - low);
@@ -146,7 +155,7 @@ export function generatePlant(seed = 2026): Plant {
         steps: spec.steps,
         wander: 12,
       }),
-      born: spec.born,
+      born: Math.max(spec.born, reachedAt(parent, index) + AFTER_TIP / 2),
       dur: spec.dur,
       depth: spec.depth,
       kind: spec.kind,
@@ -161,7 +170,7 @@ export function generatePlant(seed = 2026): Plant {
       const t = 0.3 + (n / Math.max(count - 1, 1)) * 0.7;
       const index = Math.round(t * last);
       const side = n % 2 === 0 ? 1 : -1;
-      const start = born();
+      const start = Math.max(born(), reachedAt(branch, index) + AFTER_TIP);
       const falls = !late && random() < 0.82;
       leaves.push({
         x: branch.xs[index] + between(-0.7, 0.7),
@@ -195,8 +204,9 @@ export function generatePlant(seed = 2026): Plant {
       angle: 90 + side * 62,
       size: 5.4,
       hue: side > 0 ? 0 : 1,
-      born: 0.27 + at * 0.28,
-      fall: between(0.7, 0.78),
+      born: Math.max(0.27 + at * 0.28, reachedAt(trunk, index) + AFTER_TIP),
+      // The sprout's leaves go once the crown has formed: a trunk does not keep them.
+      fall: between(0.62, 0.7),
       regrow: 2,
       drift: side * 10,
       phase: random() * Math.PI * 2,
@@ -240,16 +250,19 @@ export function generatePlant(seed = 2026): Plant {
         steps: 8,
       });
       addLeaves(twig, 12, () => between(0.58, 0.65), false);
-      for (const [x, y, radius] of [
-        [twig.xs.at(-1)!, twig.ys.at(-1)!, between(8, 12)],
-        [twig.xs[4], twig.ys[4], between(6, 9)],
+      for (const [index, radius] of [
+        [twig.xs.length - 1, between(8, 12)],
+        [4, between(6, 9)],
       ]) {
-        foliage.push({ x, y, radius });
+        const x = twig.xs[index];
+        const y = twig.ys[index];
+        const reached = reachedAt(twig, index) + AFTER_TIP;
+        foliage.push({ x, y, radius, born: reached });
         // Leaves all around each mass, so its edge reads as foliage and not as a circle.
         for (let n = 0; n < 8; n++) {
           const angle = random() * Math.PI * 2;
           const reach = radius * (0.45 + random() * 0.6);
-          const start = between(0.6, 0.66);
+          const start = Math.max(between(0.6, 0.66), reached);
           leaves.push({
             x: x + Math.cos(angle) * reach,
             y: y + Math.sin(angle) * reach,
