@@ -39,8 +39,8 @@ export type Plant = { branches: Branch[]; roots: Branch[]; leaves: Leaf[]; folia
 export const PLANT_HEIGHT = 96;
 export const DRY_START = 0.66;
 export const DRY_END = 0.8;
-export const SPROUT_FADE_START = 0.64;
-export const SPROUT_FADE = 0.08;
+export const SPROUT_FADE_START = 0.48;
+export const SPROUT_FADE = 0.07;
 
 const TO_RADIANS = Math.PI / 180;
 
@@ -209,8 +209,8 @@ export function generatePlant(seed = 2026): Plant {
       size: 5.4,
       hue: side > 0 ? 0 : 1,
       born: Math.max(0.27 + at * 0.28, reachedAt(trunk, index) + AFTER_TIP),
-      // Still there on the Galhos stage; faded out before the dry season, as the crown forms.
-      fall: between(SPROUT_FADE_START, SPROUT_FADE_START + 0.03),
+      // They fade on the way to the Galhos stage, which shows the bare branches.
+      fall: between(SPROUT_FADE_START, SPROUT_FADE_START + 0.02),
       regrow: 2,
       drift: side * 10,
       phase: random() * Math.PI * 2,

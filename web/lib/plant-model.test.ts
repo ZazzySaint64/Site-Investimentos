@@ -80,12 +80,12 @@ test("every leaf and shade mass appears where a branch has already grown", () =>
   for (const mass of plant.foliage) assert.ok(grownBy(mass.x, mass.y, mass.born, 0.01), "shade in the air");
 });
 
-test("the sprout's leaves stay on the branches stage and are gone before the dry season", () => {
+test("the sprout's leaves are there on the Broto stage and gone on Galhos", () => {
   const sprouts = plant.leaves.filter((leaf) => leaf.sprout);
   assert.equal(sprouts.length, 6);
   for (const leaf of sprouts) {
-    assert.ok(leaf.born < 0.6 && leaf.fall > 0.62, "visible on Galhos, at 0.6");
-    assert.ok(leaf.fall + SPROUT_FADE < 0.8, "faded before Seca, at 0.8");
+    assert.ok(leaf.born < leaf.fall && leaf.fall > 0.45, "visible after Broto, at 0.4");
+    assert.ok(leaf.fall + SPROUT_FADE < 0.58, "faded before Galhos, at 0.6");
     assert.equal(leaf.regrow, 2);
   }
 });
