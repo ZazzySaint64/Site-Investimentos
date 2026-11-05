@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createServerClient } from "@supabase/ssr";
 
 const REQUIRED = [
   "E2E_EMAIL_A",
@@ -16,12 +17,27 @@ export function skipWithoutUsers(): void {
   );
 }
 
+/**
+ * The site only signs in with Google, which a test cannot drive. The test users have a password in
+ * Supabase, so the session is created here and placed in the browser as the same cookies.
+ */
 export async function signIn(page: Page, who: "A" | "B" | "C"): Promise<void> {
-  await page.goto("/entrar");
-  const form = page.getByRole("form", { name: "Entrar", exact: true });
-  await form.getByLabel("E-mail").fill(process.env[`E2E_EMAIL_${who}`]!);
-  await form.getByLabel("Senha").fill(process.env[`E2E_PASSWORD_${who}`]!);
-  await form.getByRole("button", { name: "Entrar" }).click();
+  const written: { name: string; value: string }[] = [];
+  const supabase = createServerClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    cookies: {
+      getAll: () => written,
+      setAll: (cookies) => void written.push(...cookies),
+    },
+  });
+  const { error } = await supabase.auth.signInWithPassword({
+    email: process.env[`E2E_EMAIL_${who}`]!,
+    password: process.env[`E2E_PASSWORD_${who}`]!,
+  });
+  if (error) throw new Error(`sign in failed: ${error.code}`);
+  await page.context().addCookies(
+    written.map(({ name, value }) => ({ name, value, url: "http://localhost:3000", httpOnly: true })),
+  );
+  await page.goto("/carteira");
   await page.waitForURL(/\/carteira/);
 }
 

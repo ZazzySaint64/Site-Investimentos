@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { SignInForm, SignUpForm } from "./AuthForms";
 import { signInWithGoogle } from "./actions";
 
 // The page reads the session cookie, so it cannot be prerendered.
@@ -10,9 +8,7 @@ export const instant = false;
 export const metadata = { title: "Entrar | Site Investimentos" };
 
 const NOTICES: Record<string, string> = {
-  link: "Não foi possível concluir pelo link. Ele pode ter expirado ou ter sido aberto em outro navegador. Se você já confirmou o e-mail, entre com sua senha.",
-  "link-senha":
-    "Não foi possível abrir o link para criar uma nova senha. Ele pode ter expirado ou ter sido aberto em outro navegador. Peça outro link e abra neste navegador.",
+  link: "Não foi possível concluir o login. Tente entrar com Google de novo.",
   "conta-apagada": "Sua conta e seus dados foram apagados.",
 };
 
@@ -39,18 +35,7 @@ export default async function EntrarPage({ searchParams }: Props) {
           Entrar com Google
         </button>
       </form>
-      <SignInForm />
-      <p className="text-sm">
-        <Link href="/esqueci-senha" className="text-accent underline-offset-2 hover:underline">
-          Esqueci a senha
-        </Link>
-      </p>
-      <details className="rounded-lg border border-border bg-surface p-4">
-        <summary className="cursor-pointer text-sm text-text-soft">Criar conta</summary>
-        <div className="mt-3">
-          <SignUpForm />
-        </div>
-      </details>
+      <p className="text-sm text-text-soft">No primeiro acesso, sua conta é criada ao entrar.</p>
     </main>
   );
 }
