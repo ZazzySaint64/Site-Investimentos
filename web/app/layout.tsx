@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
 import Link from "next/link";
 import { StaleBanner } from "@/components/DataFreshness";
-import { PLATES } from "@/lib/plates";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,14 +19,6 @@ const text = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 const NAV_LINK = "rounded-full px-3 py-1.5 text-mist hover:text-lime";
 const FOOT_LINK = "text-forest-soft underline-offset-2 hover:text-lime hover:underline";
 
-function Leaf() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 fill-lime">
-      <path d="M21 3C10 3 4 8 4 15c0 1.6.4 3 1 4.2C7.5 13.5 11 10.3 16 8c-4.2 3-7.3 6.7-9.3 12.2.9.5 2 .8 3.3.8C17 21 21 14 21 3Z" />
-    </svg>
-  );
-}
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${display.variable} ${text.variable}`}>
@@ -38,9 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             aria-label="Principal"
             className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-1 gap-y-1 px-4 py-3 text-sm sm:px-8"
           >
-            <Link href="/" className="mr-auto flex items-center gap-2 text-mist">
-              <Leaf />
-              <span className="font-display text-xl">Site Investimentos</span>
+            <Link href="/" className="font-display mr-auto text-xl text-mist">
+              Site Investimentos
             </Link>
             <Link href="/demo/ana" className={NAV_LINK}>
               Carteira de exemplo
@@ -93,17 +83,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <p className="text-forest-soft">
                   Nada aqui é recomendação de investimento. Resultados passados não garantem
                   resultados futuros.
-                </p>
-                <p className="text-sm text-forest-soft">
-                  Pranchas de Franz Eugen Köhler, em domínio público, via Wikimedia Commons:{" "}
-                  {Object.values(PLATES).map((plate, index, all) => (
-                    <span key={plate.plant}>
-                      <a href={plate.credit} className="underline underline-offset-2 hover:text-lime">
-                        {plate.plant}
-                      </a>
-                      {index < all.length - 1 ? ", " : "."}
-                    </span>
-                  ))}
                 </p>
               </div>
             </div>

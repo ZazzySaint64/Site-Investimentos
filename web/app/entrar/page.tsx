@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PlateFrame } from "@/components/PlateFrame";
-import { PLATES } from "@/lib/plates";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { SignInForm, SignUpForm } from "./AuthForms";
 
@@ -39,7 +37,7 @@ export default async function EntrarPage({ searchParams }: Props) {
           Esqueci a senha
         </Link>
       </p>
-      <details className="rounded-lg border border-border bg-surface p-5 sm:p-6">
+      <details className="rounded-lg border border-border bg-surface p-4">
         <summary className="cursor-pointer text-sm text-text-soft">Criar conta</summary>
         <div className="mt-3">
           <SignUpForm />
@@ -49,13 +47,11 @@ export default async function EntrarPage({ searchParams }: Props) {
       <aside className="on-forest overflow-hidden rounded-lg bg-forest p-6 text-mist sm:p-10">
         <p className="font-display text-3xl leading-tight">Sua carteira, só sua.</p>
         <p className="mt-2">Cada pessoa vê apenas os próprios dados.</p>
-        <PlateFrame
-          plate={PLATES.baunilha}
-          arch
-          sizes="(min-width: 1024px) 26vw, 80vw"
-          alt="Prancha botânica antiga de baunilha, com folhas e flores."
-          className="mx-auto mt-8 max-w-xs"
-        />
+        <ul className="mt-8 space-y-3 text-lg">
+          <li>Lance compras, vendas e renda fixa.</li>
+          <li>Veja o valor de hoje, o resultado e onde o dinheiro está.</li>
+          <li>Responda ao questionário e conheça seu perfil.</li>
+        </ul>
       </aside>
     </main>
   );

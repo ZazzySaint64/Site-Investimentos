@@ -4,7 +4,7 @@ test("visitor reaches the demo in one click and walks through the screens", asyn
   await page.goto("/");
   await page.getByRole("main").getByRole("link", { name: "Ver carteira de exemplo" }).click();
   await expect(page.getByText("Exemplo com carteira fictícia")).toBeVisible();
-  await expect(page.getByText("Valor hoje")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Resumo da carteira" }).getByText("Valor hoje")).toBeVisible();
   await page.getByRole("link", { name: /Bruno/ }).click();
   await expect(page).toHaveURL(/\/demo\/bruno/);
   await expect(page.getByRole("heading", { name: /Bruno/ })).toBeVisible();

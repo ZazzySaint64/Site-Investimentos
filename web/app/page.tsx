@@ -1,12 +1,21 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { DataDate } from "@/components/DataFreshness";
-import { PlateFrame } from "@/components/PlateFrame";
 import { Term } from "@/components/Term";
-import { getAssets, type AssetRow } from "@/lib/data";
+import { getAssets, getDemoPersonas, getDemoTransactions, type AssetRow } from "@/lib/data";
 import type { GlossaryKey } from "@/lib/glossary";
-import { CLASS_PLATES, PLATES } from "@/lib/plates";
-import { formatPercent, riskLabel, returnPhrase, volatilityPhrase } from "@/lib/phrases";
+import {
+  CLASS_LABELS,
+  drawdownPhrase,
+  formatMoney,
+  formatPercent,
+  formatSignedPercent,
+  resultPhrase,
+  returnPhrase,
+  volatilityPhrase,
+} from "@/lib/phrases";
+import { computePortfolio } from "@/lib/portfolio";
 import { SpecimenPicker } from "./SpecimenPicker";
 
 const PLACES = [
@@ -62,43 +71,106 @@ const KINDS: { assetClass: string; preferred: string; label: string; term: Gloss
   { assetClass: "tesouro", preferred: "", label: "Um título do Tesouro", term: "tesouro", kind: "Tesouro Direto" },
 ];
 
-function Sheet({ asset, kind }: { asset: AssetRow; kind: (typeof KINDS)[number] }) {
-  const plate = CLASS_PLATES[asset.class];
-  const annual = asset.asset_stats?.return_annual ?? null;
-  const volatility = asset.asset_stats?.volatility ?? null;
+function SheetRow({
+  term,
+  label,
+  value,
+  phrase,
+}: {
+  term: GlossaryKey;
+  label: string;
+  value: string;
+  phrase: string;
+}) {
   return (
-    <article
-      data-ui
-      aria-label={`Ficha de ${asset.name}`}
-      className="grid gap-5 rounded-lg bg-paper p-2 sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] sm:gap-6 sm:p-3"
-    >
-      <PlateFrame
-        plate={plate}
-        sizes="(min-width: 640px) 320px, 90vw"
-        alt={`Prancha botânica antiga de ${plate.plant}.`}
-      />
-      <div className="space-y-3 px-3 pb-3 sm:px-0 sm:py-5 sm:pr-4">
+    <div className="grid gap-1 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:items-baseline sm:gap-6">
+      <div>
+        <dt className="text-sm text-muted">
+          <Term name={term}>{label}</Term>
+        </dt>
+        <dd className="text-3xl font-semibold tabular-nums">{value}</dd>
+      </div>
+      <dd>{phrase}</dd>
+    </div>
+  );
+}
+
+function Sheet({ asset, kind }: { asset: AssetRow; kind: (typeof KINDS)[number] }) {
+  const stats = asset.asset_stats;
+  const annual = stats?.return_annual ?? null;
+  const volatility = stats?.volatility ?? null;
+  const drawdown = stats?.max_drawdown ?? null;
+  return (
+    <article data-ui aria-label={`Ficha de ${asset.name}`} className="space-y-6 rounded-lg bg-paper p-5 sm:p-8">
+      <header>
         <p className="text-sm text-muted">
           <Term name={kind.term}>{kind.kind}</Term>
         </p>
-        <h3 className="font-display text-3xl leading-tight">{asset.name}</h3>
-        <p className="text-4xl font-semibold tabular-nums">
-          {formatPercent(annual)}
-          <span className="ml-2 text-base font-normal text-muted">ao ano, em média</span>
-        </p>
-        <p>{returnPhrase(annual, asset.class !== "tesouro")}</p>
-        <p className="text-sm text-text-soft">
-          <Term name="volatilidade">Oscilação</Term> {riskLabel(volatility).toLowerCase()}.{" "}
-          {volatilityPhrase(volatility)}
-        </p>
-        <Link
-          href={`/dados/${encodeURIComponent(asset.ticker)}`}
-          className="inline-block font-semibold text-accent underline-offset-2 hover:underline"
-        >
-          Ver a página completa
-        </Link>
-      </div>
+        <h3 className="font-display mt-1 text-3xl leading-tight">{asset.name}</h3>
+      </header>
+      <dl className="space-y-5">
+        <SheetRow
+          term="retorno"
+          label="Retorno ao ano"
+          value={formatSignedPercent(annual)}
+          phrase={returnPhrase(annual, asset.class !== "tesouro")}
+        />
+        <SheetRow
+          term="volatilidade"
+          label="Oscilação"
+          value={formatPercent(volatility)}
+          phrase={volatilityPhrase(volatility)}
+        />
+        <SheetRow
+          term="queda"
+          label="Maior queda"
+          value={formatSignedPercent(drawdown)}
+          phrase={drawdownPhrase(drawdown)}
+        />
+      </dl>
+      <Link
+        href={`/dados/${encodeURIComponent(asset.ticker)}`}
+        className="inline-block font-semibold text-accent underline-offset-2 hover:underline"
+      >
+        Ver a página completa
+      </Link>
     </article>
+  );
+}
+
+/** What the main button opens, with today's numbers, so the visitor knows what they will get. */
+async function ExampleWallet() {
+  await connection();
+  const data = await Promise.all([getDemoPersonas(), getDemoTransactions("ana")]).catch(() => null);
+  const persona = data?.[0].find((item) => item.slug === "ana");
+  if (!data || !persona) return null;
+  const portfolio = computePortfolio(data[1]);
+  return (
+    <aside
+      data-ui
+      aria-label={`Exemplo: carteira de ${persona.name}`}
+      className="rise-on-load rise-on-load-2 space-y-4 rounded-lg bg-surface p-5 text-text sm:p-6"
+    >
+      <p className="text-sm text-muted">Carteira de {persona.name}, um exemplo fictício</p>
+      <div>
+        <p className="text-sm text-muted">Valor hoje</p>
+        <p className="text-4xl font-semibold tabular-nums">{formatMoney(portfolio.value)}</p>
+        <p className="mt-1">{resultPhrase(portfolio.result)}</p>
+      </div>
+      <ul className="space-y-3 text-sm">
+        {portfolio.allocation.map((item) => (
+          <li key={item.assetClass}>
+            <span className="flex justify-between gap-3">
+              <span>{CLASS_LABELS[item.assetClass] ?? item.assetClass}</span>
+              <span className="tabular-nums">{formatPercent(item.share)}</span>
+            </span>
+            <span className="mt-1 block h-2 rounded-full bg-border">
+              <span className="block h-2 rounded-full bg-accent" style={{ width: `${item.share * 100}%` }} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </aside>
   );
 }
 
@@ -133,27 +205,22 @@ export default function Home() {
   return (
     <main>
       <section className="overflow-hidden">
-        <div className="on-forest relative bg-forest pb-[72vw] text-mist sm:min-h-[max(58svh,31vw)] sm:pb-24">
+        <div className="on-forest relative bg-forest text-mist lg:min-h-[max(56svh,27vw)] lg:pb-24">
           <div className="mx-auto max-w-6xl px-4 pt-12 sm:px-8 sm:pt-20">
-            <h1 className="rise-on-load text-[11.4vw] leading-[0.95] sm:text-[8vw] 2xl:text-[8.5rem]">
+            <h1 className="rise-on-load text-[11.4vw] leading-[0.95] sm:text-[7.2vw] 2xl:text-[7.75rem]">
               Investir em
               <br />
               palavras simples
             </h1>
           </div>
-          <div className="absolute right-[6vw] -bottom-10 z-10 w-[52vw] rotate-[5deg] sm:right-[5.5vw] sm:-bottom-[8vw] sm:w-[26vw] 2xl:w-[26rem]">
-            <PlateFrame
-              plate={PLATES.jaborandi}
-              arch
-              priority
-              sizes="(min-width: 640px) 28vw, 55vw"
-              alt="Prancha botânica antiga de jaborandi, planta nativa do Brasil, com folhas verdes e flores vermelhas."
-              className="shutter"
-            />
+          <div className="relative z-10 mx-auto mt-8 -mb-12 max-w-md px-4 sm:px-8 lg:absolute lg:right-[max(2rem,calc((100vw-84rem)/2+2rem))] lg:-bottom-[5vw] lg:m-0 lg:w-[28vw] lg:max-w-none lg:px-0 2xl:w-[26rem]">
+            <Suspense fallback={<div className="h-80 rounded-lg bg-forest-soft/20" />}>
+              <ExampleWallet />
+            </Suspense>
           </div>
         </div>
         <div className="bg-lime text-forest">
-          <div className="mx-auto max-w-6xl space-y-4 px-4 pt-16 pb-8 sm:px-8 sm:pt-6 sm:pr-[40vw]">
+          <div className="mx-auto max-w-6xl space-y-4 px-4 pt-20 pb-8 sm:px-8 lg:pt-6 lg:pr-[38vw]">
             <p className="rise-on-load rise-on-load-2 max-w-[44ch] text-lg leading-snug sm:text-xl">
               Veja como cada investimento se comportou e o que os números querem dizer, com dados
               públicos e sem jargão.
@@ -195,33 +262,24 @@ export default function Home() {
 
       <section aria-labelledby="lugares" className="bg-mist">
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-12 lg:gap-8 lg:py-36">
-          <div className="space-y-10 lg:col-span-8">
+          <div className="space-y-6 lg:col-span-4">
             <h2 id="lugares" className="reveal text-[clamp(2.25rem,1.3rem+3.2vw,4rem)] leading-[1.02]">
               Por onde começar
             </h2>
-            <ul className="space-y-8">
-              {PLACES.map((place) => (
-                <li key={place.href} className="reveal-2">
-                  <Link href={place.href} className="group block">
-                    <span className="font-display block text-[clamp(2.25rem,1.3rem+3.2vw,4rem)] leading-[1.05] group-hover:text-accent">
-                      {place.title}
-                    </span>
-                    <span className="mt-1 block text-lg text-text-soft">{place.text}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <p className="reveal max-w-[60ch] text-text-soft">{COMING}</p>
+            <p className="reveal-2 max-w-[44ch] text-text-soft">{COMING}</p>
           </div>
-          <div className="reveal-3 min-w-0 lg:col-span-4">
-            <PlateFrame
-              plate={PLATES.cacau}
-              arch
-              sizes="(min-width: 1024px) 30vw, 90vw"
-              alt="Prancha botânica antiga de cacau, com o fruto inteiro e aberto."
-              className="mx-auto max-w-sm lg:sticky lg:top-8"
-            />
-          </div>
+          <ul className="space-y-8 lg:col-span-8">
+            {PLACES.map((place) => (
+              <li key={place.href} className="reveal-2">
+                <Link href={place.href} className="group block">
+                  <span className="font-display block text-[clamp(2.25rem,1.3rem+3.2vw,4rem)] leading-[1.05] group-hover:text-accent">
+                    {place.title}
+                  </span>
+                  <span className="mt-1 block text-lg text-text-soft">{place.text}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -235,12 +293,6 @@ export default function Home() {
               O site só lê dados públicos e não vende nada. Toda noite, um programa busca o que há
               de novo, recalcula as contas e deixa tudo pronto para você ler de manhã.
             </p>
-            <PlateFrame
-              plate={PLATES.ipeca}
-              sizes="(min-width: 1024px) 24vw, 90vw"
-              alt="Prancha botânica antiga de ipeca, planta nativa do Brasil, com a raiz à mostra."
-              className="reveal-3 max-w-xs"
-            />
           </div>
           <div className="reveal-2 min-w-0 lg:col-span-5 lg:col-start-7">
             <div className="zigzag bg-paper p-6 pb-10 text-text tabular-nums sm:p-8 sm:pb-12">
