@@ -309,7 +309,7 @@ Começa com `llama-3.3-70b-versatile`. A fase 0 compara com `openai/gpt-oss-120b
 
 O README informa como o site foi construído.
 
-O login é pelo Supabase Auth, só com Google. O login por e-mail e senha saiu na fase 3, porque exigiria um serviço de SMTP para confirmar contas e recuperar senhas. Pode voltar em uma fase futura.
+O login é pelo Supabase Auth, com e-mail e senha. O login com Google entra em uma fase futura.
 
 ### Padrões de interface
 

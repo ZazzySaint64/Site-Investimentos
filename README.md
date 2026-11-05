@@ -10,7 +10,7 @@ Um site que trabalha com dados de investimentos, focado em pessoas leigas: carte
 
 O job de dados está pronto. O site já tem tela inicial, carteira de exemplo sem login, lista de ativos com busca, página de cada ativo com explicações e glossário. Também já existem login, questionário, lançamento de compras e vendas e de renda fixa, painel da carteira própria e a posição de cada ativo. Cada pessoa vê só os próprios dados. Simulador e assistente vêm nas próximas fases.
 
-O login é só com Google. O provedor de e-mail do Supabase continua ligado, com "Confirm email" ativo, apenas para os usuários dos testes E2E.
+O cadastro por e-mail precisa de um SMTP (a Brevo, por exemplo) configurado no painel do Supabase; sem ele, o Supabase limita o envio de e-mails de confirmação.
 
 Este site foi construído com o Claude, sob a direção do autor.
 

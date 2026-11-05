@@ -36,6 +36,7 @@ export const config = {
     "/questionario",
     "/conta",
     "/entrar",
+    "/nova-senha",
     "/dados/:path*",
   ],
 };

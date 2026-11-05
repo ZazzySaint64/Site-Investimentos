@@ -6,28 +6,22 @@ test("visitor without a session is sent to the login page", async ({ page }) => 
   await expect(page).toHaveURL(/\/entrar/);
 });
 
-test("the login page offers only Google and starts the flow from this site", async ({ page }) => {
-  await page.route("**/auth/v1/authorize**", (route) => route.fulfill({ body: "google" }));
+test("wrong password shows a plain message", async ({ page }) => {
   await page.goto("/entrar");
-  await expect(page.getByLabel("Senha")).toHaveCount(0);
-  await page.getByRole("button", { name: "Entrar com Google" }).click();
-  await page.waitForURL(/\/auth\/v1\/authorize/);
-
-  const authorize = new URL(page.url());
-  expect(authorize.searchParams.get("provider")).toBe("google");
-  expect(authorize.searchParams.get("redirect_to")).toBe("http://localhost:3000/auth/callback");
-  expect(authorize.searchParams.get("code_challenge")).toBeTruthy();
-
-  // Written by the site's own Supabase client, the same one that later writes the session cookies.
-  const cookies = await page.context().cookies("http://localhost:3000");
-  const verifier = cookies.find((cookie) => cookie.name.endsWith("-code-verifier"));
-  expect(verifier?.httpOnly).toBe(true);
+  const form = page.getByRole("form", { name: "Entrar", exact: true });
+  await form.getByLabel("E-mail").fill("ninguem@example.com");
+  await form.getByLabel("Senha").fill("senha-errada-123");
+  await form.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
 });
 
 test("sign in reaches the wallet and sign out ends the session", async ({ page }) => {
   skipWithoutUsers();
   await signIn(page, "A");
   await expect(page).toHaveURL(/\/carteira/);
+  const sessionCookies = (await page.context().cookies()).filter((c) => c.name.startsWith("sb-"));
+  expect(sessionCookies.length).toBeGreaterThan(0);
+  for (const cookie of sessionCookies) expect(cookie.httpOnly).toBe(true);
   await page.getByRole("link", { name: "Conta" }).click();
   await page.getByRole("button", { name: "Sair" }).click();
   await page.waitForURL((url) => url.pathname === "/");
@@ -35,9 +29,9 @@ test("sign in reaches the wallet and sign out ends the session", async ({ page }
   await expect(page).toHaveURL(/\/entrar/);
 });
 
-test("a failed login explains what happened", async ({ page }) => {
+test("a broken email link explains what happened", async ({ page }) => {
   await page.goto("/auth/callback?code=invalido");
-  await expect(page.getByText("Não foi possível concluir o login")).toBeVisible();
+  await expect(page.getByText("Não foi possível concluir pelo link")).toBeVisible();
 });
 
 test("questionnaire refuses a target that does not add up and saves a fixed one", async ({ page }) => {
@@ -78,5 +72,9 @@ test("deleting the account through the screen removes it for good", async ({ pag
   await page.waitForURL(/\/entrar\?aviso=conta-apagada/);
   await expect(page.getByText("Sua conta e seus dados foram apagados.")).toBeVisible();
 
-  await expect(signIn(page, "C")).rejects.toThrow("invalid_credentials");
+  const login = page.getByRole("form", { name: "Entrar", exact: true });
+  await login.getByLabel("E-mail").fill(process.env.E2E_EMAIL_C!);
+  await login.getByLabel("Senha").fill(process.env.E2E_PASSWORD_C!);
+  await login.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByText("E-mail ou senha incorretos.")).toBeVisible();
 });

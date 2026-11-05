@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { callbackTarget } from "@/lib/auth-messages";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
-  const code = request.nextUrl.searchParams.get("code");
+  const { searchParams } = request.nextUrl;
+  const code = searchParams.get("code");
   let exchanged = false;
   if (code) {
     try {
@@ -10,10 +12,8 @@ export async function GET(request: NextRequest) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       exchanged = !error;
     } catch {
-      // An invalid code can throw; it is shown as a failed login.
+      // An invalid link can throw; it is shown as an expired link.
     }
   }
-  // The destination is fixed on purpose: a `next` parameter would be an open redirect.
-  const target = exchanged ? "/carteira" : "/entrar?aviso=link";
-  return NextResponse.redirect(new URL(target, request.url));
+  return NextResponse.redirect(new URL(callbackTarget(searchParams, exchanged), request.url));
 }

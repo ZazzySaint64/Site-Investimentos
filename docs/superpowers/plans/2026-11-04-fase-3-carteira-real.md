@@ -16,7 +16,7 @@
 
 ## Decisões a confirmar na revisão
 
-> **Mudança de 2026-11-04, depois das Tarefas 1 a 8:** o autor escolheu **só Google nesta fase** na decisão 1. O site não tem mais formulários de e-mail e senha, `/esqueci-senha`, `/nova-senha` nem `lib/auth-messages.ts`. Os testes E2E criam a sessão em `e2e/session.ts`, com a senha dos usuários de teste, sem passar por uma tela. O provedor de e-mail do Supabase fica ligado, com "Confirm email" ativo, só para isso. Onde este plano ainda citar e-mail, senha, SMTP ou Brevo, vale esta nota; o texto fica como registro do que foi planejado.
+> **Mudança de 2026-11-04, depois das Tarefas 1 a 8:** o autor decidiu que o login é só por e-mail e senha nesta fase, e que o Google entra depois. Onde este plano citar Google, o texto fica como registro do que foi planejado. O SMTP da decisão 1 continua necessário.
 
 A spec não decide estes pontos, ou entra em conflito com fatos novos. O plano segue a opção indicada, salvo decisão diferente do autor.
 
@@ -279,7 +279,7 @@ Em Supabase > Authentication:
 
 1. **URL Configuration:** Site URL `https://site-investimentos-gray.vercel.app`. Redirect URLs: `http://localhost:3000/auth/callback**` e `https://site-investimentos-gray.vercel.app/auth/callback**`.
 2. **E-mail:** deixe "Confirm email" ligado e use senha mínima de 8 caracteres.
-3. **SMTP:** não se aplica. O login é só com Google.
+3. **SMTP** (decisão 1): crie a conta na Brevo e verifique o remetente. Sugestão: um Gmail só do projeto, porque o endereço aparece para quem recebe. Desligue o rastreamento de links. Preencha SMTP em Authentication > Emails. Se a Brevo exigir domínio próprio, use o SMTP do Gmail com senha de app nesse mesmo endereço.
 4. **Google:** no Google Cloud Console, crie um cliente OAuth do tipo Web, com a URI de redirecionamento `https://dlxjoowezwoyoedkcvac.supabase.co/auth/v1/callback`, e publique a tela de consentimento em produção, só com e-mail e perfil. Preencha o ID e o segredo em Authentication > Providers > Google.
 
 Avise Claude quando terminar, sem colar nenhum valor na conversa.
@@ -906,7 +906,7 @@ Aprove o merge de `fase-3` em `main`. A Vercel publica sozinha. Nenhuma variáve
 Em `https://site-investimentos-gray.vercel.app`, em navegador novo:
 
 - `/`, `/demo/ana`, `/dados/PETR4` e `/glossario` abrem sem login, sem cair em erro de dados.
-- O autor entra com Google, o que cria a conta. Claude não digita a credencial do Google.
+- O autor cria uma conta por e-mail e entra com Google. Claude não digita a senha nem a credencial do Google.
 - O autor lança uma compra e vê o painel, a posição na página do ativo e a data dos dados.
 - O autor sai, e `/carteira` volta para `/entrar`.
 - O autor apaga a conta de teste.
@@ -914,4 +914,4 @@ Em `https://site-investimentos-gray.vercel.app`, em navegador novo:
 
 - [ ] **Step 4: Registrar**
 
-Relatório, seção "Fase 3": login só com Google, tamanho do banco e tempo de carga de `/carteira`. README com o estado atual. Commit e push com autorização do autor, porque a branch já foi integrada.
+Relatório, seção "Fase 3": provedor de SMTP usado e limite confirmado, tamanho do banco e tempo de carga de `/carteira`. README com o estado atual. Commit e push com autorização do autor, porque a branch já foi integrada.
