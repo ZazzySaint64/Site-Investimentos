@@ -36,28 +36,63 @@ test("the home page swaps the sheet and its sentence when another investment is 
   await expect(sheet.getByText(/por ano em até 5 anos/)).toBeVisible();
 });
 
-test("the growth journey moves sideways and leaves the page scroll alone", async ({ page }) => {
+test("the growth journey moves sideways with the scroll", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: /Investir em/ })).toBeInViewport();
+  const first = page.getByRole("heading", { level: 1, name: /Investir em/ });
   const roots = page.getByRole("heading", { name: "Primeiro, as raízes" });
+  await expect(first).toBeInViewport();
   await expect(roots).not.toBeInViewport();
 
   await page.getByRole("button", { name: "Próxima etapa" }).click();
   await expect(roots).toBeInViewport();
   await expect(page.getByRole("button", { name: "Raízes" })).toHaveAttribute("aria-current", "step");
 
+  await page.waitForTimeout(1200); // the smooth scroll of the click must end first
+  await page.mouse.move(400, 300);
+  await page.mouse.wheel(0, 800);
+  await expect(page.getByRole("button", { name: "Broto" })).toHaveAttribute("aria-current", "step");
+  await expect(page.getByRole("heading", { name: "Depois, a constância" })).toBeInViewport();
+
+  await page.getByRole("button", { name: "Galhos" }).click();
+  await page.getByRole("button", { name: "Ações" }).click();
+  await expect(page.getByText("Partes de empresas")).toBeVisible();
+
   await page.getByRole("button", { name: "Árvore" }).click();
   await expect(page.getByRole("heading", { name: "O tempo faz o resto" })).toBeInViewport();
-  await page.getByRole("button", { name: "Voltar ao início" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: /Investir em/ })).toBeInViewport();
 
-  await page.mouse.move(400, 300);
-  await page.mouse.wheel(0, 500);
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await page.getByRole("link", { name: "Pular" }).click();
+  await expect(page.getByRole("main").getByRole("link", { name: "Ver carteira de exemplo" })).toBeInViewport();
 });
 
-test("the growth journey works with reduced motion and fits a phone", async ({ page }) => {
+test("the growth journey moves when dragged sideways and by the arrow keys", async ({ page }) => {
+  await page.goto("/");
+  const box = page.getByRole("group", { name: /Etapas/ });
+  await expect(page.getByRole("heading", { level: 1, name: /Investir em/ })).toBeInViewport();
+
+  await page.mouse.move(1000, 300);
+  await page.mouse.down();
+  await page.mouse.move(100, 300, { steps: 8 });
+  await page.mouse.up();
+  await expect(page.getByRole("button", { name: "Semente" })).not.toHaveAttribute("aria-current", "step");
+
+  await page.getByRole("button", { name: "Semente" }).click();
+  await expect(page.getByRole("button", { name: "Semente" })).toHaveAttribute("aria-current", "step");
+  await box.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "Raízes" })).toHaveAttribute("aria-current", "step");
+});
+
+test("with reduced motion it is a plain sideways row that still fits a phone", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Galhos" }).click();
+  await expect(page.getByRole("heading", { name: "Cada galho, um risco" })).toBeInViewport();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  expect(overflow).toBe(false);
+});
+
+test("the phone layout does not overflow while pinned", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/");
   await page.getByRole("button", { name: "Galhos" }).click();

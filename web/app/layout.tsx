@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`${display.variable} ${text.variable}`}>
       <body className="flex min-h-screen flex-col antialiased">
         <StaleBanner />
-        <header className="on-forest bg-forest">
+        <header className="on-forest sticky top-0 z-30 h-[var(--header-height)] bg-forest">
           <nav
             aria-label="Principal"
             className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-1 gap-y-1 px-4 py-3 text-sm sm:px-8"

@@ -256,7 +256,7 @@ export default function Home() {
     <main>
       <GrowthJourney />
 
-      <section aria-label="Comece por aqui" className="bg-lime text-forest">
+      <section id="comece" aria-label="Comece por aqui" className="bg-lime text-forest">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-12 lg:items-center lg:py-14">
           <div className="space-y-4 lg:col-span-7">
             <p className="max-w-[44ch] text-lg leading-snug sm:text-xl">

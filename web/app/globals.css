@@ -39,6 +39,14 @@
 
 html {
   color-scheme: light;
+  --header-height: 6rem;
+  scroll-padding-top: var(--header-height);
+}
+
+@media (min-width: 640px) {
+  html {
+    --header-height: 3.5rem;
+  }
 }
 
 body {
