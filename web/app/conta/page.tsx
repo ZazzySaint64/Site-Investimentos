@@ -15,7 +15,7 @@ export default async function ContaPage() {
         E-mail: <span className="tabular-nums">{user.email}</span>
       </p>
       <SignOutForm />
-      <details className="rounded-lg border border-border bg-surface p-4">
+      <details className="rounded-lg border border-border bg-surface p-5 sm:p-6">
         <summary className="cursor-pointer text-sm text-text-soft">Apagar minha conta</summary>
         <div className="mt-3 space-y-3">
           <p className="text-sm text-text-soft">

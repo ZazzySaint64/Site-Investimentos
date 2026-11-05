@@ -88,7 +88,7 @@ export function QuestionnaireForm({ saved }: { saved: Profile | null }) {
       <p className="text-sm text-muted">Este questionário é simplificado e não substitui avaliação profissional.</p>
 
       {risk && values && (
-        <section className="space-y-4 rounded-lg border border-border bg-surface p-4">
+        <section className="space-y-4 rounded-lg border border-border bg-surface p-5 sm:p-6">
           <h2 className="text-lg font-semibold">Seu perfil: {PROFILE_LABEL[risk]}</h2>
           <input type="hidden" name="risk_profile" value={risk} />
           <p className="text-sm text-text-soft">

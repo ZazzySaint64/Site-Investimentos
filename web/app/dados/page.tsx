@@ -30,7 +30,7 @@ function MacroCard({
   note: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
       <p className="text-xs text-muted">{label}</p>
       <p className="mt-1 tabular-nums text-2xl">{value}</p>
       <p className="mt-1 text-sm text-text-soft">{phrase}</p>

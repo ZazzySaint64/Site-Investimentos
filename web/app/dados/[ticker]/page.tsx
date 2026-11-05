@@ -56,7 +56,7 @@ function Metric({
   phrase: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
       <p className="text-xs text-muted">
         <Term name={term}>{label}</Term>
       </p>
@@ -184,7 +184,7 @@ export default async function AssetDataPage({ params }: Props) {
         </div>
       </section>
 
-      <section aria-labelledby="chart" className="rounded-lg border border-border bg-surface p-4">
+      <section aria-labelledby="chart" className="rounded-lg border border-border bg-surface p-5 sm:p-6">
         <h2 id="chart" className="text-sm font-medium">
           Como o preço andou
         </h2>

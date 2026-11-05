@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PlateFrame } from "@/components/PlateFrame";
 import { PLATES } from "@/lib/plates";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { SignInForm, SignUpForm } from "./AuthForms";
@@ -39,7 +39,7 @@ export default async function EntrarPage({ searchParams }: Props) {
           Esqueci a senha
         </Link>
       </p>
-      <details className="rounded-lg border border-border bg-surface p-4">
+      <details className="rounded-lg border border-border bg-surface p-5 sm:p-6">
         <summary className="cursor-pointer text-sm text-text-soft">Criar conta</summary>
         <div className="mt-3">
           <SignUpForm />
@@ -49,13 +49,12 @@ export default async function EntrarPage({ searchParams }: Props) {
       <aside className="on-forest overflow-hidden rounded-lg bg-forest p-6 text-mist sm:p-10">
         <p className="font-display text-3xl leading-tight">Sua carteira, só sua.</p>
         <p className="mt-2">Cada pessoa vê apenas os próprios dados.</p>
-        <Image
-          src={PLATES.baunilha.src}
-          width={PLATES.baunilha.width}
-          height={PLATES.baunilha.height}
-          sizes="(min-width: 1024px) 40vw, 90vw"
+        <PlateFrame
+          plate={PLATES.baunilha}
+          arch
+          sizes="(min-width: 1024px) 26vw, 80vw"
           alt="Prancha botânica antiga de baunilha, com folhas e flores."
-          className="mt-8 aspect-[4/3] w-full rounded-t-full object-cover object-top"
+          className="mx-auto mt-8 max-w-xs"
         />
       </aside>
     </main>

@@ -68,7 +68,7 @@ export default async function DemoPage({ params }: Props) {
       <AllocationList portfolio={portfolio} />
       <PositionsTable portfolio={portfolio} />
 
-      <details className="rounded-lg border border-border bg-surface p-4 text-sm">
+      <details className="rounded-lg border border-border bg-surface p-5 sm:p-6 text-sm">
         <summary className="cursor-pointer text-text-soft">Ver compras e vendas</summary>
         <p className="mt-3 text-xs text-muted">Quantidade e preço como eram na data da operação.</p>
         <ul className="mt-2 divide-y divide-border">

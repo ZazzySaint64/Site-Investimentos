@@ -31,7 +31,7 @@ export function SpecimenPicker({ specimens }: { specimens: Specimen[] }) {
           );
         })}
       </div>
-      <div className="relative h-[70svh] min-h-[560px] overflow-hidden rounded-lg bg-mist lg:col-span-7 lg:h-[88svh]">
+      <div className="min-w-0 rounded-lg bg-mist p-3 sm:p-6 lg:col-span-7 lg:p-10">
         {specimens.map((specimen) => (
           <div key={specimen.key} hidden={specimen.key !== selected}>
             {specimen.sheet}

@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { DataDate } from "@/components/DataFreshness";
+import { PlateFrame } from "@/components/PlateFrame";
 import { Term } from "@/components/Term";
 import { getAssets, type AssetRow } from "@/lib/data";
 import type { GlossaryKey } from "@/lib/glossary";
@@ -70,17 +70,14 @@ function Sheet({ asset, kind }: { asset: AssetRow; kind: (typeof KINDS)[number] 
     <article
       data-ui
       aria-label={`Ficha de ${asset.name}`}
-      className="absolute top-4 left-4 w-[min(560px,calc(100%-2rem))] rounded-lg bg-paper p-3 sm:top-10 sm:left-10 lg:left-16"
+      className="grid gap-5 rounded-lg bg-paper p-2 sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] sm:gap-6 sm:p-3"
     >
-      <Image
-        src={plate.src}
-        width={plate.width}
-        height={plate.height}
-        sizes="(min-width: 640px) 540px, 90vw"
+      <PlateFrame
+        plate={plate}
+        sizes="(min-width: 640px) 320px, 90vw"
         alt={`Prancha botânica antiga de ${plate.plant}.`}
-        className="aspect-[5/4] w-full rounded-md object-cover object-[50%_30%]"
       />
-      <div className="space-y-3 px-3 pt-4 pb-4">
+      <div className="space-y-3 px-3 pb-3 sm:px-0 sm:py-5 sm:pr-4">
         <p className="text-sm text-muted">
           <Term name={kind.term}>{kind.kind}</Term>
         </p>
@@ -136,7 +133,7 @@ export default function Home() {
   return (
     <main>
       <section className="overflow-hidden">
-        <div className="on-forest relative bg-forest pb-[66vw] text-mist sm:pb-36 lg:min-h-[62svh]">
+        <div className="on-forest relative bg-forest pb-[72vw] text-mist sm:min-h-[max(58svh,31vw)] sm:pb-24">
           <div className="mx-auto max-w-6xl px-4 pt-12 sm:px-8 sm:pt-20">
             <h1 className="rise-on-load text-[11.4vw] leading-[0.95] sm:text-[8vw] 2xl:text-[8.5rem]">
               Investir em
@@ -144,18 +141,15 @@ export default function Home() {
               palavras simples
             </h1>
           </div>
-          <div className="absolute right-[6vw] -bottom-10 z-10 w-[52vw] rotate-[5deg] sm:right-[7vw] sm:-bottom-36 sm:w-[28vw] 2xl:w-[26rem]">
-            <div className="shutter overflow-hidden rounded-t-full">
-              <Image
-                src={PLATES.jaborandi.src}
-                width={PLATES.jaborandi.width}
-                height={PLATES.jaborandi.height}
-                priority
-                sizes="(min-width: 640px) 30vw, 55vw"
-                alt="Prancha botânica antiga de jaborandi, planta nativa do Brasil, com folhas verdes e flores vermelhas."
-                className="aspect-[3/4] w-full object-cover"
-              />
-            </div>
+          <div className="absolute right-[6vw] -bottom-10 z-10 w-[52vw] rotate-[5deg] sm:right-[5.5vw] sm:-bottom-[8vw] sm:w-[26vw] 2xl:w-[26rem]">
+            <PlateFrame
+              plate={PLATES.jaborandi}
+              arch
+              priority
+              sizes="(min-width: 640px) 28vw, 55vw"
+              alt="Prancha botânica antiga de jaborandi, planta nativa do Brasil, com folhas verdes e flores vermelhas."
+              className="shutter"
+            />
           </div>
         </div>
         <div className="bg-lime text-forest">
@@ -193,7 +187,7 @@ export default function Home() {
           Todo número vem com uma frase
         </h2>
         <div className="reveal-2">
-          <Suspense fallback={<div className="h-[70svh] rounded-lg bg-mist" />}>
+          <Suspense fallback={<div className="h-96 rounded-lg bg-mist" />}>
             <Specimens />
           </Suspense>
         </div>
@@ -219,14 +213,13 @@ export default function Home() {
             </ul>
             <p className="reveal max-w-[60ch] text-text-soft">{COMING}</p>
           </div>
-          <div className="reveal-3 lg:col-span-4">
-            <Image
-              src={PLATES.cacau.src}
-              width={PLATES.cacau.width}
-              height={PLATES.cacau.height}
+          <div className="reveal-3 min-w-0 lg:col-span-4">
+            <PlateFrame
+              plate={PLATES.cacau}
+              arch
               sizes="(min-width: 1024px) 30vw, 90vw"
               alt="Prancha botânica antiga de cacau, com o fruto inteiro e aberto."
-              className="max-h-[60svh] w-full rounded-t-full object-cover lg:sticky lg:top-8 lg:max-h-none"
+              className="mx-auto max-w-sm lg:sticky lg:top-8"
             />
           </div>
         </div>
@@ -242,13 +235,11 @@ export default function Home() {
               O site só lê dados públicos e não vende nada. Toda noite, um programa busca o que há
               de novo, recalcula as contas e deixa tudo pronto para você ler de manhã.
             </p>
-            <Image
-              src={PLATES.ipeca.src}
-              width={PLATES.ipeca.width}
-              height={PLATES.ipeca.height}
-              sizes="(min-width: 1024px) 28vw, 90vw"
+            <PlateFrame
+              plate={PLATES.ipeca}
+              sizes="(min-width: 1024px) 24vw, 90vw"
               alt="Prancha botânica antiga de ipeca, planta nativa do Brasil, com a raiz à mostra."
-              className="reveal-3 aspect-[4/3] w-full max-w-md rounded-lg object-cover object-[50%_75%]"
+              className="reveal-3 max-w-xs"
             />
           </div>
           <div className="reveal-2 min-w-0 lg:col-span-5 lg:col-start-7">

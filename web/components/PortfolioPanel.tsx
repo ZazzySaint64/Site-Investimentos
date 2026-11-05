@@ -31,14 +31,14 @@ export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; no
   return (
     <section aria-label="Resumo da carteira" className="space-y-2">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
           <p className="text-xs text-muted">Valor hoje</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums">{formatMoney(portfolio.value)}</p>
           <p className="mt-1 text-sm text-text-soft">
             Quanto a carteira valeria pelos preços mais recentes.
           </p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
           <p className="text-xs text-muted">
             <Term name="resultado">Resultado</Term>
           </p>
@@ -48,7 +48,7 @@ export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; no
           </p>
           <p className="mt-1 text-sm text-text-soft">{resultPhrase(portfolio.result)}</p>
         </div>
-        <div className="rounded-lg border border-border bg-surface p-4">
+        <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
           <p className="text-xs text-muted">Quanto está investido</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums">{formatMoney(portfolio.invested)}</p>
           <p className="mt-1 text-sm text-text-soft">
@@ -73,7 +73,7 @@ export function AllocationList({ portfolio }: { portfolio: Portfolio }) {
       <h2 id="alocacao" className="text-2xl">
         Onde o dinheiro está (<Term name="alocacao">alocação</Term>)
       </h2>
-      <ul className="space-y-3 rounded-lg border border-border bg-surface p-4">
+      <ul className="space-y-4 rounded-lg border border-border bg-surface p-5 sm:p-6">
         {portfolio.allocation.map((item) => {
           const plate = CLASS_PLATES[item.assetClass];
           return (
@@ -85,7 +85,7 @@ export function AllocationList({ portfolio }: { portfolio: Portfolio }) {
                   width={96}
                   height={96}
                   alt=""
-                  className="size-12 rounded-full object-cover object-[50%_35%]"
+                  className="size-14 rounded-full bg-paper object-cover object-[50%_35%] p-1.5"
                 />
               )}
               {CLASS_LABELS[item.assetClass] ?? item.assetClass}
