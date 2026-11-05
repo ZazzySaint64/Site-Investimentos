@@ -100,3 +100,33 @@ test("the phone layout does not overflow while pinned", async ({ page }) => {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 });
+
+test("the leaves stay on the tree on a scaled screen", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, deviceScaleFactor: 2, viewport: { width: 1280, height: 800 } });
+  const page = await context.newPage();
+  try {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Árvore" }).click();
+    await expect(page.getByRole("heading", { name: "O tempo faz o resto" })).toBeInViewport();
+    await page.waitForTimeout(1500);
+    const leaves = await page.evaluate(() => {
+      const canvas = document.querySelector("canvas")!;
+      const { width, height } = canvas;
+      const data = canvas.getContext("2d")!.getImageData(0, 0, width, Math.round(height * 0.7)).data;
+      let near = 0;
+      let far = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const isLeaf = data[i + 1] > 150 && data[i + 1] > data[i + 2] * 1.5;
+        if (!isLeaf) continue;
+        const x = (i / 4) % width;
+        if (x > width * 0.45) near++;
+        else if (x < width * 0.3) far++;
+      }
+      return { near, far };
+    });
+    expect(leaves.near).toBeGreaterThan(20000);
+    expect(leaves.far).toBeLessThan(leaves.near / 20);
+  } finally {
+    await context.close();
+  }
+});

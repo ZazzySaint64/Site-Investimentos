@@ -79,32 +79,29 @@ type Scene = {
   originX: number;
   zoom: number;
   time: number;
-  gust: number;
-  pointerX: number;
-  pointerY: number;
   p: number;
 };
 
-/** Sideways movement of a world point: the breeze, the pointer and clicks. Higher points move more. */
+/** Sideways movement of a world point in a light breeze. Higher points move more. */
 function sway(scene: Scene, x: number, y: number): number {
   if (y <= 0) return 0;
   const height = y / PLANT_HEIGHT;
   const strength = height * Math.sqrt(height);
-  const { time, gust } = scene;
-  let offset =
-    strength *
-    (1.5 * Math.sin(time * 0.9 + x * 0.05) + 0.7 * Math.sin(time * 2.1 + y * 0.09) + gust * 8 * Math.sin(time * 9 + y * 0.1));
-  const screenX = scene.originX + x * scene.unit * scene.zoom;
-  const screenY = scene.groundY - y * scene.unit * scene.zoom;
-  const dx = screenX - scene.pointerX;
-  const dy = screenY - scene.pointerY;
-  const reach = 150;
-  const distance = dx * dx + dy * dy;
-  if (distance < reach * reach) {
-    const push = 1 - Math.sqrt(distance) / reach;
-    offset += Math.sign(dx || 1) * push * push * 5 * Math.min(1, height * 3);
+  return strength * (1.1 * Math.sin(scene.time * 0.8 + x * 0.05) + 0.45 * Math.sin(scene.time * 1.9 + y * 0.09));
+}
+
+/** Fills a closed outline with curves through the midpoints of its points, so no corners show. */
+function fillSmooth(ctx: CanvasRenderingContext2D, outline: [number, number][]) {
+  const count = outline.length;
+  ctx.beginPath();
+  ctx.moveTo((outline[0][0] + outline[count - 1][0]) / 2, (outline[0][1] + outline[count - 1][1]) / 2);
+  for (let i = 0; i < count; i++) {
+    const [x, y] = outline[i];
+    const [nextX, nextY] = outline[(i + 1) % count];
+    ctx.quadraticCurveTo(x, y, (x + nextX) / 2, (y + nextY) / 2);
   }
-  return offset;
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawLimb(ctx: CanvasRenderingContext2D, scene: Scene, branch: Branch, color: string, thickness: number) {
@@ -144,18 +141,20 @@ function drawLimb(ctx: CanvasRenderingContext2D, scene: Scene, branch: Branch, c
   }
 
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(left[0][0], left[0][1]);
-  for (const [x, y] of left) ctx.lineTo(x, y);
-  for (let i = right.length - 1; i >= 0; i--) ctx.lineTo(right[i][0], right[i][1]);
-  ctx.closePath();
-  ctx.fill();
+  fillSmooth(ctx, [...left, ...right.slice().reverse()]);
+
+  if (branch.depth <= 1 && scale * branch.widths[0] * thickness > 5) {
+    ctx.fillStyle = "rgba(11,36,32,0.28)";
+    const shadeEdge = px.map((x, i): [number, number] => [x + (right[i][0] - x) * 0.15, py[i] + (right[i][1] - py[i]) * 0.15]);
+    fillSmooth(ctx, [...shadeEdge, ...right.slice().reverse()]);
+  }
 }
 
-const LEAF_PATH = typeof Path2D === "undefined" ? null : new Path2D("M0 0 C.2 -.3 .68 -.34 1 0 C.68 .34 .2 .3 0 0Z");
+const LEAF_PATH = typeof Path2D === "undefined" ? null : new Path2D("M0 0 C.18 -.34 .66 -.38 1 0 C.66 .38 .18 .34 0 0Z");
 
 function drawLeaf(
   ctx: CanvasRenderingContext2D,
+  density: number,
   x: number,
   y: number,
   angleDegrees: number,
@@ -164,9 +163,9 @@ function drawLeaf(
   alpha = 1,
 ) {
   const angle = angleDegrees * TO_RADIANS;
-  const cos = Math.cos(angle) * size;
-  const sin = Math.sin(angle) * size;
-  ctx.setTransform(cos, sin, -sin, cos, x, y);
+  const cos = Math.cos(angle) * size * density;
+  const sin = Math.sin(angle) * size * density;
+  ctx.setTransform(cos, sin, -sin, cos, x * density, y * density);
   ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
   ctx.fill(LEAF_PATH as Path2D);
@@ -238,7 +237,7 @@ function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: num
   for (let i = 0; i < GRASS.length; i += 2) {
     const x = ((GRASS[i] * (width + 300) - travel) % (width + 300) + width + 300) % (width + 300) - 150;
     const blade = 4 + GRASS[i + 1] * 9;
-    const lean = Math.sin(time * 1.4 + x * 0.02) * 2.5 + scene.gust * 6;
+    const lean = Math.sin(time * 1.4 + x * 0.02) * 2.5;
     ctx.moveTo(x, groundY);
     ctx.quadraticCurveTo(x + lean * 0.3, groundY - blade * 0.6, x + lean, groundY - blade);
   }
@@ -259,8 +258,6 @@ function drawBackground(ctx: CanvasRenderingContext2D, scene: Scene, travel: num
     ctx.globalAlpha = 1;
   }
 }
-
-type Burst = { x: number; y: number; vx: number; vy: number; angle: number; spin: number; hue: number; life: number };
 
 /** Draws the plant from the current progress. Reads no React state while running. */
 export function PlantCanvas({
@@ -291,9 +288,6 @@ export function PlantCanvas({
     const ctx = element?.getContext("2d");
     if (!element || !ctx) return;
 
-    const pointer = { x: -9999, y: -9999 };
-    let gust = 0;
-    let bursts: Burst[] = [];
     let cssWidth = 0;
     let cssHeight = 0;
     let scale = 1;
@@ -313,9 +307,7 @@ export function PlantCanvas({
 
     function draw(now: number) {
       const seconds = still ? 0 : now / 1000;
-      const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
-      gust *= Math.pow(0.05, dt);
       const p = clamp01(progress.get());
       const wide = cssWidth >= 1024;
       const groundY = cssHeight * (wide ? 0.78 : 0.38);
@@ -331,9 +323,6 @@ export function PlantCanvas({
         originX: (wide ? cssWidth * 0.74 : cssWidth * 0.5) - (wide ? p * cssWidth * 0.03 : 0),
         zoom,
         time: seconds,
-        gust,
-        pointerX: pointer.x,
-        pointerY: pointer.y,
         p,
       };
       const dry = smooth((p - DRY_START) / 0.08) * (1 - smooth((p - DRY_END - 0.03) / 0.12));
@@ -349,7 +338,7 @@ export function PlantCanvas({
       for (let i = plant.roots.length - 1; i >= 0; i--) {
         const root = plant.roots[i];
         const thick = root.depth === 0 ? interpolate(p, THICKNESS_STOPS) * 0.95 + 0.1 : 0.45 + 0.55 * smooth((p - root.born) / 0.7);
-        drawLimb(ctx!, scene, root, mix(ROOT, [176, 198, 178], root.depth / 2), thick);
+        drawLimb(ctx!, scene, root, root.depth === 0 ? rampAt(TRUNK_RAMP, 1) : mix(OLD_BARK, ROOT, root.depth / 2), thick);
       }
 
       const seed = 1 - smooth((p - 0.19) / 0.08);
@@ -388,35 +377,21 @@ export function PlantCanvas({
         const fading = selected === null ? 1 : dim ? 0.28 : 1;
 
         if (p < leaf.fall) {
-          drawLeaf(ctx!, baseX, baseY, -leaf.angle + flutter, size * smooth(opened), color, fading);
+          drawLeaf(ctx!, scale, baseX, baseY, -leaf.angle + flutter, size * smooth(opened), color, fading);
         } else {
           const fall = clamp01((p - leaf.fall) / 0.09);
           if (fall < 1) {
             const dropY = baseY + (groundY - baseY) * fall * fall;
             const dropX = baseX + leaf.drift * world * fall * 0.6 + Math.sin(fall * 8 + leaf.phase) * 14 * fall;
-            drawLeaf(ctx!, dropX, dropY, -leaf.angle + fall * 420 + leaf.phase * 40, size, color, fading * (1 - fall * fall));
+            drawLeaf(ctx!, scale, dropX, dropY, -leaf.angle + fall * 420 + leaf.phase * 40, size, color, fading * (1 - fall * fall));
           }
           const back = (p - leaf.regrow) / 0.04;
           if (back > 0) {
-            drawLeaf(ctx!, baseX, baseY, -leaf.angle + flutter, size * smooth(back) * 1.05, LEAF_RAMPS[leaf.hue][0], fading);
+            drawLeaf(ctx!, scale, baseX, baseY, -leaf.angle + flutter, size * smooth(back) * 1.05, LEAF_RAMPS[leaf.hue][0], fading);
           }
         }
       }
 
-      // Leaves shaken loose by a click. Real physics, not tied to progress.
-      if (bursts.length) {
-        for (const leaf of bursts) {
-          leaf.vy += 60 * dt;
-          leaf.vx *= 0.98;
-          leaf.x += leaf.vx * dt;
-          leaf.y += leaf.vy * dt;
-          leaf.angle += leaf.spin * dt;
-          leaf.life -= dt * 0.4;
-          if (leaf.y >= groundY) leaf.life = 0;
-          drawLeaf(ctx!, leaf.x, leaf.y, leaf.angle, 3.4 * world, LEAF_RAMPS[leaf.hue][0], clamp01(leaf.life));
-        }
-        bursts = bursts.filter((leaf) => leaf.life > 0);
-      }
       ctx!.setTransform(scale, 0, 0, scale, 0, 0);
       ctx!.globalAlpha = 1;
     }
@@ -426,40 +401,7 @@ export function PlantCanvas({
       frame = requestAnimationFrame(loop);
     }
 
-    function onMove(event: PointerEvent) {
-      const box = element!.getBoundingClientRect();
-      pointer.x = event.clientX - box.left;
-      pointer.y = event.clientY - box.top;
-    }
-    function onLeave() {
-      pointer.x = -9999;
-      pointer.y = -9999;
-    }
-    function onClick(event: MouseEvent) {
-      if ((event.target as Element).closest("a,button,input")) return;
-      const p = clamp01(progress.get());
-      if (still || p < 0.4) return;
-      gust = 1;
-      const box = element!.getBoundingClientRect();
-      const x = event.clientX - box.left;
-      const y = event.clientY - box.top;
-      if (bursts.length > 40 || p < 0.6) return;
-      for (let i = 0; i < 9; i++) {
-        bursts.push({
-          x: x + (Math.random() - 0.5) * 50,
-          y: y + (Math.random() - 0.5) * 40,
-          vx: (Math.random() - 0.5) * 90,
-          vy: -30 - Math.random() * 50,
-          angle: Math.random() * 360,
-          spin: (Math.random() - 0.5) * 300,
-          hue: Math.floor(Math.random() * 4),
-          life: 1,
-        });
-      }
-    }
-
     redraw.current = () => draw(performance.now());
-    const host = element.parentElement!;
     const observer = new ResizeObserver(resize);
     observer.observe(element);
     const watcher = new IntersectionObserver(([entry]) => {
@@ -467,9 +409,6 @@ export function PlantCanvas({
     });
     watcher.observe(element);
     if (!still) {
-      host.addEventListener("pointermove", onMove);
-      host.addEventListener("pointerleave", onLeave);
-      host.addEventListener("click", onClick);
       frame = requestAnimationFrame(loop);
     }
     resize();
@@ -478,9 +417,6 @@ export function PlantCanvas({
       cancelAnimationFrame(frame);
       observer.disconnect();
       watcher.disconnect();
-      host.removeEventListener("pointermove", onMove);
-      host.removeEventListener("pointerleave", onLeave);
-      host.removeEventListener("click", onClick);
       redraw.current = () => {};
     };
   }, [plant, progress, still]);

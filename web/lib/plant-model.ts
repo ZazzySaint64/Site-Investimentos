@@ -115,7 +115,7 @@ export function generatePlant(seed = 2026): Plant {
     kind: null,
   };
   // The base flares where it meets the ground, as real trunks do.
-  trunk.widths = trunk.widths.map((width, i) => width * (1 + 0.45 * Math.max(0, 1 - i / 3)));
+  trunk.widths = trunk.widths.map((width, i) => width * (1 + 0.3 * Math.pow(Math.max(0, 1 - i / 6), 2)));
   branches.push(trunk);
 
   function grow(parent: Branch, at: number, side: number, spec: {
@@ -133,7 +133,7 @@ export function generatePlant(seed = 2026): Plant {
       ...walk(random, {
         x: parent.xs[index],
         y: parent.ys[index],
-        heading: base + side * 14,
+        heading: base + side * 16,
         target: base + side * spec.spread,
         length: spec.length,
         w0: Math.max(parent.widths[index] * 0.66, 0.35),
@@ -153,16 +153,16 @@ export function generatePlant(seed = 2026): Plant {
   function addLeaves(branch: Branch, count: number, born: () => number, late: boolean) {
     const last = branch.xs.length - 1;
     for (let n = 0; n < count; n++) {
-      const t = 0.35 + (n / Math.max(count - 1, 1)) * 0.65;
+      const t = 0.3 + (n / Math.max(count - 1, 1)) * 0.7;
       const index = Math.round(t * last);
       const side = n % 2 === 0 ? 1 : -1;
       const start = born();
       const falls = !late && random() < 0.82;
       leaves.push({
-        x: branch.xs[index],
-        y: branch.ys[index],
-        angle: headingAt(branch, index) + side * between(28, 62),
-        size: between(2.6, 4.4),
+        x: branch.xs[index] + between(-0.7, 0.7),
+        y: branch.ys[index] + between(-0.7, 0.7),
+        angle: headingAt(branch, index) + side * between(28, 72),
+        size: between(3.4, 5.6),
         hue: Math.floor(random() * 4),
         born: start,
         fall: falls ? between(Math.max(DRY_START, start + 0.02), DRY_END - 0.02) : 2,
@@ -218,20 +218,20 @@ export function generatePlant(seed = 2026): Plant {
       kind: limb.kind,
       steps: 12,
     });
-    addLeaves(main, 3, () => between(0.56, 0.62), false);
+    addLeaves(main, 5, () => between(0.56, 0.62), false);
 
     for (const [i, at] of [0.4, 0.62, 0.82, 1].entries()) {
       const side = i % 2 === 0 ? -limb.side : limb.side;
       const twig = grow(main, at, side, {
         spread: between(22, 44),
-        length: limb.length * between(0.36, 0.55),
+        length: limb.length * between(0.42, 0.6),
         born: 0.5 + i * 0.015,
         dur: 0.12,
         depth: 2,
         kind: limb.kind,
         steps: 8,
       });
-      addLeaves(twig, 7, () => between(0.58, 0.65), false);
+      addLeaves(twig, 11, () => between(0.58, 0.65), false);
 
       // Grows only after the dry season: the plant comes back larger.
       for (const lateSide of [-1, 1]) {
@@ -244,7 +244,7 @@ export function generatePlant(seed = 2026): Plant {
           kind: limb.kind,
           steps: 6,
         });
-        addLeaves(late, 6, () => between(0.87, 0.97), true);
+        addLeaves(late, 9, () => between(0.87, 0.97), true);
       }
     }
   }
@@ -273,7 +273,7 @@ export function generatePlant(seed = 2026): Plant {
     return branch;
   }
 
-  const taproot = root(0, 0, -92, 19, 5.2, 0.02, 0);
+  const taproot = root(0, 0, -92, 19, 6.8, 0.02, 0);
   const laterals: [number, number][] = [
     [-160, 19],
     [-22, 21],
