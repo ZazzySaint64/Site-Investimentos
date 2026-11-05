@@ -1,5 +1,6 @@
 // Reads from Supabase with the publishable key. The site never calls the external data sources.
 
+import type { Dividend, FiiMonth, FiiQuarter } from "./fii.ts";
 import type { Transaction } from "./portfolio.ts";
 
 const PAGE_SIZE = 1000;
@@ -149,4 +150,27 @@ export type HoldableAsset = { ticker: string; name: string; class: string };
 
 export function getHoldableAssets(): Promise<HoldableAsset[]> {
   return get("/assets?select=ticker,name,class&holdable=eq.true&active=eq.true&order=name");
+}
+
+export function getDividends(ticker: string): Promise<Dividend[]> {
+  const filter = `assets.ticker=eq.${encodeURIComponent(ticker)}`;
+  return getAllPages(
+    `/dividends?select=date,amount,assets!inner(ticker)&${filter}&order=date`,
+  ).then((rows) =>
+    (rows as Dividend[]).map(({ date, amount }) => ({
+      date,
+      amount: Number(amount),
+    })),
+  );
+}
+
+export async function getFiiReports(
+  ticker: string,
+): Promise<{ months: FiiMonth[]; quarter: FiiQuarter | null }> {
+  const filter = `assets.ticker=eq.${encodeURIComponent(ticker)}`;
+  const [months, quarters] = await Promise.all([
+    get<FiiMonth[]>(`/fii_monthly?select=*,assets!inner(ticker)&${filter}&order=month`),
+    get<FiiQuarter[]>(`/fii_quarterly?select=*,assets!inner(ticker)&${filter}`),
+  ]);
+  return { months, quarter: quarters[0] ?? null };
 }

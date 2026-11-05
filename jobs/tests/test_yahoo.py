@@ -23,13 +23,14 @@ def ticker(monkeypatch):
     return fake
 
 
-def frame(days, closes, adj=None, splits=None):
+def frame(days, closes, adj=None, splits=None, dividends=None):
     index = pd.DatetimeIndex(days, tz="America/Sao_Paulo")
     return pd.DataFrame(
         {
             "Close": closes,
             "Adj Close": adj if adj is not None else closes,
             "Stock Splits": splits if splits is not None else [0.0] * len(days),
+            "Dividends": dividends if dividends is not None else [0.0] * len(days),
         },
         index=index,
     )
@@ -61,6 +62,12 @@ def test_collects_splits_only_when_nonzero(ticker):
     ticker.frame = frame(["2026-10-29", "2026-10-30"], [10.0, 11.0], splits=[0.0, 4.0])
     history = yahoo.fetch_history("AAPL", None, date(2026, 11, 3))
     assert history.splits == [(date(2026, 10, 30), 4.0)]
+
+
+def test_collects_dividends_only_when_paid(ticker):
+    ticker.frame = frame(["2026-10-29", "2026-10-30"], [10.0, 11.0], dividends=[0.0, 0.85])
+    history = yahoo.fetch_history("HGLG11.SA", None, date(2026, 11, 3))
+    assert history.dividends == [(date(2026, 10, 30), 0.85)]
 
 
 def test_passes_auto_adjust_false_and_start(ticker):

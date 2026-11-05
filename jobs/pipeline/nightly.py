@@ -23,6 +23,7 @@ from pipeline.catalog import (
     yahoo_symbol,
 )
 from pipeline.sources.bcb import SERIES, fetch_series, year_windows
+from pipeline.sources.cvm import fetch_fii_reports
 from pipeline.sources.tesouro import TesouroData, fetch_tesouro, pays_coupons
 from pipeline.sources.yahoo import History, fetch_history, ten_years_before
 from pipeline.validate import repair_adjusted_close, validate_prices
@@ -45,6 +46,7 @@ class Deps:
     fetch_tesouro: Callable
     catalog: list[Asset]
     db: Any
+    fetch_fii_reports: Callable | None = None
 
 
 @dataclass
@@ -107,7 +109,11 @@ def _adjustment_changed(history: History, saved: dict[date, dict]) -> bool:
     latest = max(saved)  # may have been saved as a partial bar during trading hours
     for row in history.prices:
         stored = saved.get(row["date"])
-        if stored and row["date"] != latest and abs(row["adj_close"] / float(stored["adj_close"]) - 1) > ADJUSTMENT_TOLERANCE:
+        if (
+            stored
+            and row["date"] != latest
+            and abs(row["adj_close"] / float(stored["adj_close"]) - 1) > ADJUSTMENT_TOLERANCE
+        ):
             return True
     return False
 
@@ -120,6 +126,7 @@ def _market_history(deps, asset, asset_id, saved, today, full, cut) -> tuple[His
         return History(
             [row for row in history.prices if row["date"] >= cut],
             [split for split in history.splits if split[0] >= cut],
+            [paid for paid in history.dividends if paid[0] >= cut],
         )
 
     start = None if full or not saved else max(saved) - timedelta(days=OVERLAP_DAYS)
@@ -180,6 +187,14 @@ def _process_asset(
         )
         deps.db.upsert(
             "prices", [{"asset_id": asset_id, **row} for row in accepted], "asset_id,date"
+        )
+        deps.db.upsert(
+            "dividends",
+            [
+                {"asset_id": asset_id, "date": day, "amount": amount}
+                for day, amount in history.dividends
+            ],
+            "asset_id,date",
         )
         # A refetch replaces the history: rows it left out are on the old scale, or were rejected
         # now, or fell out of the 10-year window. A truncated response keeps them.
@@ -269,6 +284,36 @@ def _write_stats(deps, assets_by_ticker, adj_close_by_ticker, today) -> None:
     )
 
 
+def _write_fii_reports(deps, assets_by_ticker, today, result) -> bool:
+    """Reports the funds send to CVM. Returns False when the source failed."""
+    tickers = [asset.ticker for asset in deps.catalog if asset.asset_class == "fii"]
+    if not tickers or deps.fetch_fii_reports is None:
+        return True
+    try:
+        reports = deps.fetch_fii_reports(tickers, today)
+    except Exception as exc:
+        print(f"cvm failed: {exc}", file=sys.stderr)
+        result.failed.append("cvm")
+        return False
+    for table, rows, key in (
+        ("fii_monthly", reports.monthly, "asset_id,month"),
+        ("fii_quarterly", reports.quarterly, "asset_id"),
+    ):
+        deps.db.upsert(
+            table,
+            [
+                {
+                    "asset_id": assets_by_ticker[row["ticker"]]["id"],
+                    **{column: value for column, value in row.items() if column != "ticker"},
+                }
+                for row in rows
+            ],
+            key,
+        )
+    result.skipped += [f"sem informe na CVM: {ticker}" for ticker in reports.missing]
+    return True
+
+
 def _execute(deps, today, tickers, full, released, history_starts) -> RunResult:
     result = RunResult("success")
     tesouro: TesouroData | None = None
@@ -319,13 +364,15 @@ def _execute(deps, today, tickers, full, released, history_starts) -> RunResult:
     result.failed += failed_assets
 
     _write_stats(deps, assets_by_ticker, adj_close_by_ticker, today)
+    # A run limited to some tickers is a repair of prices; the fund reports wait for the next night.
+    reports_ok = tickers is not None or _write_fii_reports(deps, assets_by_ticker, today, result)
 
     # yfinance reports most outages as an empty response, so those count like failures here.
     unavailable = len(failed_assets) + without_data
     too_many = candidates and unavailable >= FAILED_SHARE * len(candidates)
     if tesouro_failed or macro_failed or too_many:
         result.status = "failed"
-    elif failed_assets or result.rejected:
+    elif failed_assets or result.rejected or not reports_ok:
         result.status = "partial"
     return result
 
@@ -338,10 +385,16 @@ def run(
     released: set[tuple[str, date]] = frozenset(),
     history_starts: dict[str, date] | None = None,
 ) -> RunResult:
-    job = deps.db.insert_returning("job_runs", {"job": "nightly", "status": "running", "details": {}})
+    job = deps.db.insert_returning(
+        "job_runs", {"job": "nightly", "status": "running", "details": {}}
+    )
 
     def close(status: str, details: dict) -> None:
-        values = {"status": status, "finished_at": datetime.now(UTC).isoformat(), "details": details}
+        values = {
+            "status": status,
+            "finished_at": datetime.now(UTC).isoformat(),
+            "details": details,
+        }
         deps.db.update("job_runs", {"id": str(job["id"])}, values)
 
     try:
@@ -363,7 +416,9 @@ def parse_release(text: str) -> tuple[str, date]:
 
 def default_deps() -> Deps:
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
-    return Deps(fetch_history, fetch_series, fetch_tesouro, load_catalog(), default_db)
+    return Deps(
+        fetch_history, fetch_series, fetch_tesouro, load_catalog(), default_db, fetch_fii_reports
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

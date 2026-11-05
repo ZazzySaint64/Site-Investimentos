@@ -53,3 +53,31 @@ export function fixedIncomePositions(rows: FixedIncome[], cdi: Cdi, today: strin
     };
   });
 }
+
+/** Income tax on most fixed income by days held (Lei 11.033, art. 1º). IOF before 30 days is left out. */
+export function regressiveTax(days: number): number {
+  if (days <= 180) return 0.225;
+  if (days <= 360) return 0.2;
+  if (days <= 720) return 0.175;
+  return 0.15;
+}
+
+/** The taxed rate that leaves the same after tax as a tax-exempt one, in the same unit. */
+export function taxedEquivalent(exemptRate: number, days: number): number {
+  return exemptRate / (1 - regressiveTax(days));
+}
+
+/** Price of a title that pays only at maturity, for each 1 it pays then. Rates as fractions a year. */
+export function zeroCouponPrice(years: number, rate: number): number {
+  return 1 / (1 + rate) ** years;
+}
+
+/** How much the price of such a title moves when market rates move by `shift`. */
+export function priceChange(years: number, rate: number, shift: number): number {
+  return zeroCouponPrice(years, rate + shift) / zeroCouponPrice(years, rate) - 1;
+}
+
+/** Modified duration of a title without coupons: about the % change for 1 point of rate. */
+export function modifiedDuration(years: number, rate: number): number {
+  return years / (1 + rate);
+}

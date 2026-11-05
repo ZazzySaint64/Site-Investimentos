@@ -71,12 +71,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     Glossário
                   </Link>
                 </li>
+                <li>
+                  <Link href="/renda-fixa" className={FOOT_LINK}>
+                    Contas da renda fixa
+                  </Link>
+                </li>
               </ul>
               <ul className="space-y-1.5">
                 <li className="font-semibold">De onde vêm os dados</li>
                 <li className="text-forest-soft">Yahoo Finance</li>
                 <li className="text-forest-soft">Tesouro Transparente</li>
                 <li className="text-forest-soft">Banco Central do Brasil</li>
+                <li className="text-forest-soft">CVM, informes de fundos imobiliários</li>
               </ul>
               <div className="space-y-3 sm:col-span-2 lg:col-span-1">
                 <p className="font-semibold">Projeto educativo e não comercial</p>

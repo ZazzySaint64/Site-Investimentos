@@ -2,8 +2,10 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { DataDate } from "@/components/DataFreshness";
+import { Metric } from "@/components/Metric";
 import { Term } from "@/components/Term";
-import { getAsset, getCdiHistory, getPrices } from "@/lib/data";
+import { getAsset, getCdiHistory, getDividends, getFiiReports, getPrices } from "@/lib/data";
+import { dividendPhrase, dividendYield } from "@/lib/fii";
 import type { GlossaryKey } from "@/lib/glossary";
 import {
   COUPON_PHRASE,
@@ -20,6 +22,7 @@ import {
   sharpePhrase,
   volatilityPhrase,
 } from "@/lib/phrases";
+import { FundReport } from "./FundReport";
 import { MyPosition } from "./MyPosition";
 import { PriceChart } from "./PriceChart";
 
@@ -27,6 +30,7 @@ import { PriceChart } from "./PriceChart";
 export const instant = false;
 
 const CHART_POINT_STEP = 5;
+const YEAR_MS = 365.25 * 24 * 60 * 60 * 1000;
 const CLASS_TERMS: Record<string, { term: GlossaryKey; label: string }> = {
   acao_br: { term: "acao", label: "Ação" },
   fii: { term: "fii", label: "Fundo imobiliário" },
@@ -44,34 +48,14 @@ function formatRatio(value: number | null): string {
   return value === null ? "—" : value.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 }
 
-function Metric({
-  term,
-  label,
-  value,
-  phrase,
-}: {
-  term: GlossaryKey;
-  label: string;
-  value: string;
-  phrase: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <p className="text-xs text-muted">
-        <Term name={term}>{label}</Term>
-      </p>
-      <p className="mt-1 text-3xl font-semibold tabular-nums">{value}</p>
-      <p className="mt-1 text-sm text-text-soft">{phrase}</p>
-    </div>
-  );
-}
-
 export default async function AssetDataPage({ params }: Props) {
   const ticker = decodeURIComponent((await params).ticker);
-  const [asset, prices, cdi] = await Promise.all([
+  const [asset, prices, cdi, dividends, fund] = await Promise.all([
     getAsset(ticker),
     getPrices(ticker),
     getCdiHistory(),
+    getDividends(ticker),
+    getFiiReports(ticker),
   ]);
   if (!asset) notFound();
 
@@ -84,6 +68,15 @@ export default async function AssetDataPage({ params }: Props) {
     (_, index) => index % CHART_POINT_STEP === 0 || index === prices.length - 1,
   );
   const classInfo = CLASS_TERMS[asset.class];
+  // Selic titles follow the rate itself, and coupon titles need a different calculation.
+  const lastPrice = asset.prices[0];
+  const yearsLeft =
+    isTesouro && asset.maturity && lastPrice && !coupons && !asset.ticker.startsWith("TD-SELIC-")
+      ? Math.max(
+          0.5,
+          Math.round(((Date.parse(asset.maturity) - Date.parse(lastPrice.date)) / YEAR_MS) * 2) / 2,
+        )
+      : null;
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
@@ -104,6 +97,15 @@ export default async function AssetDataPage({ params }: Props) {
       <Suspense fallback={null}>
         <MyPosition ticker={ticker} />
       </Suspense>
+
+      {asset.class === "fii" && (
+        <FundReport
+          months={fund.months}
+          quarter={fund.quarter}
+          dividends={dividends}
+          price={asset.prices[0] ?? null}
+        />
+      )}
 
       {growth && (
         <section
@@ -142,6 +144,18 @@ export default async function AssetDataPage({ params }: Props) {
         </section>
       )}
 
+      {yearsLeft !== null && (
+        <p className="rounded-lg border border-border bg-surface p-4 text-sm">
+          Este título paga tudo no vencimento, então o preço reage aos juros do mercado.{" "}
+          <Link
+            href={`/renda-fixa?anos=${yearsLeft}#juros`}
+            className="text-accent underline underline-offset-2"
+          >
+            Ver quanto o preço muda se os juros mudarem
+          </Link>
+        </p>
+      )}
+
       <section aria-labelledby="stats" className="space-y-3">
         <h2 id="stats" className="text-sm font-medium text-muted">
           O que os números dizem (até 5 anos de histórico)
@@ -173,6 +187,16 @@ export default async function AssetDataPage({ params }: Props) {
             value={coupons ? "—" : formatRatio(stats?.sharpe ?? null)}
             phrase={coupons ? COUPON_PHRASE : sharpePhrase(stats?.sharpe ?? null)}
           />
+          {asset.class === "acao_br" && (
+            <Metric
+              term="dividend_yield"
+              label="Proventos em 12 meses"
+              value={formatPercent(
+                dividendYield(dividends, asset.prices[0] ?? null)?.value ?? null,
+              )}
+              phrase={dividendPhrase(dividendYield(dividends, asset.prices[0] ?? null), "ação")}
+            />
+          )}
           {!isIndex && (
             <Metric
               term="correlacao"

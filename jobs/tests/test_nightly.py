@@ -5,6 +5,7 @@ import pytest
 from pipeline import db as real_db
 from pipeline import nightly
 from pipeline.catalog import Asset
+from pipeline.sources.cvm import FiiReports
 from pipeline.sources.tesouro import TesouroData
 from pipeline.sources.yahoo import History
 
@@ -96,6 +97,8 @@ class Fake:
         self.tesouro = TesouroData([], {}, [])
         self.tesouro_error = None
         self.tesouro_calls = 0
+        self.fii_reports = FiiReports([], [], [])
+        self.fii_calls = []
 
     def fetch_history(self, symbol, start, today):
         self.history_calls.append((symbol, start))
@@ -118,6 +121,12 @@ class Fake:
             raise self.tesouro_error
         return self.tesouro
 
+    def fetch_fii_reports(self, tickers, today):
+        self.fii_calls.append(tickers)
+        if isinstance(self.fii_reports, Exception):
+            raise self.fii_reports
+        return self.fii_reports
+
     def run(self, **kwargs):
         deps = nightly.Deps(
             fetch_history=self.fetch_history,
@@ -125,6 +134,7 @@ class Fake:
             fetch_tesouro=self.fetch_tesouro,
             catalog=self.catalog,
             db=self.db,
+            fetch_fii_reports=self.fetch_fii_reports,
         )
         return nightly.run(deps, kwargs.pop("today", TODAY), **kwargs)
 
@@ -168,7 +178,9 @@ def test_one_asset_failure_does_not_stop_others(fake):
 def test_ten_percent_failures_marks_failed_and_main_returns_1(fake, monkeypatch):
     fake.catalog = [stock("A")] + [stock(f"S{i}") for i in range(9)]
     fake.histories["A.SA"] = RuntimeError("yahoo down")
-    deps = nightly.Deps(fake.fetch_history, fake.fetch_series, fake.fetch_tesouro, fake.catalog, fake.db)
+    deps = nightly.Deps(
+        fake.fetch_history, fake.fetch_series, fake.fetch_tesouro, fake.catalog, fake.db
+    )
     monkeypatch.setattr(nightly, "default_deps", lambda: deps)
     assert nightly.main([]) == 1
     assert fake.rows("job_runs")[-1]["status"] == "failed"
@@ -177,7 +189,9 @@ def test_ten_percent_failures_marks_failed_and_main_returns_1(fake, monkeypatch)
 def test_main_returns_0_when_partial(fake, monkeypatch):
     fake.catalog = [stock("A")] + [stock(f"S{i}") for i in range(20)]
     fake.histories["A.SA"] = RuntimeError("yahoo down")
-    deps = nightly.Deps(fake.fetch_history, fake.fetch_series, fake.fetch_tesouro, fake.catalog, fake.db)
+    deps = nightly.Deps(
+        fake.fetch_history, fake.fetch_series, fake.fetch_tesouro, fake.catalog, fake.db
+    )
     monkeypatch.setattr(nightly, "default_deps", lambda: deps)
     assert nightly.main([]) == 0
 
@@ -199,8 +213,15 @@ def test_tesouro_failure_marks_failed_but_stocks_are_written(fake):
 
 
 def test_tesouro_failure_keeps_existing_titles_active(fake):
-    title = Asset("TD-SELIC-20290301", "Tesouro Selic 2029", "tesouro", "BRL", "Renda fixa", False,
-                  maturity=date(2029, 3, 1))
+    title = Asset(
+        "TD-SELIC-20290301",
+        "Tesouro Selic 2029",
+        "tesouro",
+        "BRL",
+        "Renda fixa",
+        False,
+        maturity=date(2029, 3, 1),
+    )
     fake.tesouro = TesouroData([title], {title.ticker: days_back(3)}, [])
     fake.run()
     fake.tesouro_error = RuntimeError("tesouro down")
@@ -209,8 +230,15 @@ def test_tesouro_failure_keeps_existing_titles_active(fake):
 
 
 def test_tesouro_prices_and_skipped_lines_are_recorded(fake):
-    title = Asset("TD-SELIC-20290301", "Tesouro Selic 2029", "tesouro", "BRL", "Renda fixa", False,
-                  maturity=date(2029, 3, 1))
+    title = Asset(
+        "TD-SELIC-20290301",
+        "Tesouro Selic 2029",
+        "tesouro",
+        "BRL",
+        "Renda fixa",
+        False,
+        maturity=date(2029, 3, 1),
+    )
     fake.tesouro = TesouroData([title], {title.ticker: days_back(3)}, ["tipo desconhecido: X"])
     result = fake.run()
     assert len(fake.prices("TD-SELIC-20290301")) == 3
@@ -421,8 +449,15 @@ def test_asset_without_prices_has_no_stats(fake):
 
 
 def test_sector_stats_exclude_tesouro_and_index(fake):
-    title = Asset("TD-SELIC-20290301", "Tesouro Selic 2029", "tesouro", "BRL", "Renda fixa", False,
-                  maturity=date(2029, 3, 1))
+    title = Asset(
+        "TD-SELIC-20290301",
+        "Tesouro Selic 2029",
+        "tesouro",
+        "BRL",
+        "Renda fixa",
+        False,
+        maturity=date(2029, 3, 1),
+    )
     index = Asset("^BVSP", "Ibovespa", "indice", "BRL", "Índice falso", False, holdable=False)
     fake.catalog = [stock("A", "Bancos"), index]
     fake.tesouro = TesouroData([title], {title.ticker: monthly_history(14)}, [])
@@ -437,7 +472,9 @@ def test_sector_stats_keep_assets_outside_the_tickers_option(fake):
     fake.histories["A.SA"] = History(monthly_history(14, step=0.02), [])
     fake.histories["B.SA"] = History(monthly_history(14, step=0.20), [])
     fake.run()
-    before = next(r for r in fake.rows("sector_stats") if r["sector"] == "Bancos")["worst_month_ret"]
+    before = next(r for r in fake.rows("sector_stats") if r["sector"] == "Bancos")[
+        "worst_month_ret"
+    ]
     fake.run(tickers=["A"])
     after = next(r for r in fake.rows("sector_stats") if r["sector"] == "Bancos")["worst_month_ret"]
     assert after == pytest.approx(before)
@@ -449,7 +486,8 @@ def test_parse_release_handles_caret_tickers():
 
 def test_false_adjustment_step_is_repaired_before_saving(fake):
     fake.histories["A.SA"] = History(
-        [row(TODAY - timedelta(days=2), 100.0, 10.0), row(TODAY - timedelta(days=1), 100.0, 100.0)], []
+        [row(TODAY - timedelta(days=2), 100.0, 10.0), row(TODAY - timedelta(days=1), 100.0, 100.0)],
+        [],
     )
     fake.run()
     assert [r["adj_close"] for r in fake.prices("A")] == pytest.approx([100.0, 100.0])
@@ -511,7 +549,9 @@ def test_refetch_removes_monthly_returns_of_removed_months(fake):
     fake.histories["A.SA"] = History(history, [])
     fake.run()
     asset_id = fake.asset("A")["id"]
-    months = lambda: sorted(r["month"] for r in fake.rows("monthly_returns") if r["asset_id"] == asset_id)
+    months = lambda: sorted(
+        r["month"] for r in fake.rows("monthly_returns") if r["asset_id"] == asset_id
+    )
     first_month = months()[0]
     scaled = [row(r["date"], r["close"] / 2) for r in history[2:]]
     fake.histories["A.SA"] = History(scaled, [(history[-1]["date"], 2.0)])
@@ -596,3 +636,49 @@ def test_coupon_title_has_no_return_because_coupons_are_not_counted(fake):
 def test_run_limited_by_tickers_is_marked_in_details(fake):
     fake.run(tickers=["A"])
     assert fake.rows("job_runs")[-1]["details"]["tickers"] == ["A"]
+
+
+def fund(ticker):
+    return Asset(ticker, ticker, "fii", "BRL", "FII Logística", False)
+
+
+def test_dividends_are_saved_with_the_prices(fake):
+    fake.histories["A.SA"] = History(days_back(3), [], [(TODAY - timedelta(days=1), 0.42)])
+    fake.run()
+    asset_id = fake.asset("A")["id"]
+    assert fake.rows("dividends") == [
+        {"asset_id": asset_id, "date": (TODAY - timedelta(days=1)).isoformat(), "amount": 0.42}
+    ]
+
+
+def test_fund_reports_are_saved_by_asset(fake):
+    fake.catalog = [stock("A"), fund("HGLG11"), fund("NOVO11")]
+    month = {"ticker": "HGLG11", "month": date(2026, 9, 1), "book_value": 165.5}
+    quarter = {"ticker": "HGLG11", "quarter": date(2026, 6, 30), "vacancy": 0.02}
+    fake.fii_reports = FiiReports([month], [quarter], ["NOVO11"])
+    result = fake.run()
+    asset_id = fake.asset("HGLG11")["id"]
+    assert fake.fii_calls == [["HGLG11", "NOVO11"]]
+    assert fake.rows("fii_monthly") == [
+        {"asset_id": asset_id, "month": "2026-09-01", "book_value": 165.5}
+    ]
+    assert fake.rows("fii_quarterly") == [
+        {"asset_id": asset_id, "quarter": "2026-06-30", "vacancy": 0.02}
+    ]
+    assert result.status == "success"
+    assert "sem informe na CVM: NOVO11" in result.skipped
+
+
+def test_cvm_failure_is_partial_and_keeps_the_prices(fake):
+    fake.catalog = [stock("A"), fund("HGLG11")]
+    fake.fii_reports = RuntimeError("cvm down")
+    result = fake.run()
+    assert result.status == "partial"
+    assert "cvm" in result.failed
+    assert len(fake.prices("HGLG11")) == 3
+
+
+def test_run_limited_by_tickers_skips_fund_reports(fake):
+    fake.catalog = [stock("A"), fund("HGLG11")]
+    fake.run(tickers=["HGLG11"])
+    assert fake.fii_calls == []
