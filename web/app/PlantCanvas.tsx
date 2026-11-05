@@ -59,7 +59,7 @@ const THICKNESS_STOPS = [
   [0.2, 0.14],
   [0.45, 0.26],
   [0.7, 0.78],
-  [1, 1.14],
+  [1, 1.2],
 ] as const;
 
 const ZOOM_STOPS = [
@@ -353,6 +353,24 @@ export function PlantCanvas({
         ctx!.fill();
       }
 
+      // The crown's shade fills out with the leaves, thins in the dry season and returns larger.
+      const fullness =
+        smooth((p - 0.61) / 0.05) * (1 - smooth((p - DRY_START - 0.02) / 0.1)) * 0.75 + smooth((p - DRY_END - 0.02) / 0.15);
+      const massColor = selected === null ? "#1d4a39" : "#173c30";
+      const paintMasses = (color: string, size: number, lift: number) => {
+        ctx!.fillStyle = color;
+        ctx!.beginPath();
+        for (const mass of plant.foliage) {
+          const radius = mass.radius * size * fullness * world;
+          const x = scene.originX + (mass.x + sway(scene, mass.x, mass.y) + lift) * world;
+          const y = groundY - (mass.y + lift) * world;
+          ctx!.moveTo(x + radius, y);
+          ctx!.arc(x, y, radius, 0, Math.PI * 2);
+        }
+        ctx!.fill();
+      };
+      if (fullness > 0.01) paintMasses(massColor, 0.72, 0);
+
       for (let i = plant.branches.length - 1; i >= 0; i--) {
         const branch = plant.branches[i];
         const age = (p - branch.born - branch.dur * 0.5) / 0.32;
@@ -363,14 +381,20 @@ export function PlantCanvas({
         drawLimb(ctx!, scene, branch, color, thick);
       }
 
-      for (const leaf of plant.leaves) {
+      if (fullness > 0.01) paintMasses(selected === null ? "#245a43" : "#1d4a39", 0.5, 1.2);
+
+      // A phone has fewer pixels to fill and less power: half the leaves, a little larger.
+      const leafStep = wide ? 1 : 2;
+      const leafGrowth = wide ? 1 : 1.3;
+      for (let index = 0; index < plant.leaves.length; index += leafStep) {
+        const leaf = plant.leaves[index];
         const opened = (p - leaf.born) / 0.05;
         if (opened <= 0) continue;
         const swayed = sway(scene, leaf.x, leaf.y);
         const baseX = scene.originX + (leaf.x + swayed) * world;
         const baseY = groundY - leaf.y * world;
         const flutter = Math.sin(seconds * 2.3 + leaf.phase) * 7;
-        const size = leaf.size * world;
+        const size = leaf.size * world * leafGrowth;
         const dim = selected !== null && leaf.kind !== selected;
         const toOchre = clamp01(dry * (leaf.fall < 2 ? 1.1 : 0.45));
         const color = rampAt(LEAF_RAMPS[leaf.hue], toOchre);

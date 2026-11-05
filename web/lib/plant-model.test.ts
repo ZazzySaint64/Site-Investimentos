@@ -51,3 +51,11 @@ test("the dry season takes most leaves, and they come back after it", () => {
   }
   assert.ok(plant.leaves.filter((leaf) => leaf.born > DRY_END).length > 100, "new growth after the drought");
 });
+
+test("the crown has masses of shade, and the shaded leaves are drawn first", () => {
+  assert.ok(plant.foliage.length >= 30);
+  for (const mass of plant.foliage) assert.ok(mass.y > 25, "shade stays up in the crown");
+  const hues = plant.leaves.map((leaf) => leaf.hue);
+  assert.deepEqual(hues, [...hues].sort((a, b) => b - a));
+});
+

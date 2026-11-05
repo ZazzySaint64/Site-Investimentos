@@ -29,7 +29,10 @@ export type Leaf = {
   kind: number | null;
 };
 
-export type Plant = { branches: Branch[]; roots: Branch[]; leaves: Leaf[] };
+/** A mass of shade inside the crown, behind the leaves. It is what makes the crown look full. */
+export type Foliage = { x: number; y: number; radius: number };
+
+export type Plant = { branches: Branch[]; roots: Branch[]; leaves: Leaf[]; foliage: Foliage[] };
 
 export const PLANT_HEIGHT = 96;
 export const DRY_START = 0.66;
@@ -96,16 +99,18 @@ export function generatePlant(seed = 2026): Plant {
   const between = (low: number, high: number) => low + random() * (high - low);
   const branches: Branch[] = [];
   const leaves: Leaf[] = [];
+  const foliage: Foliage[] = [];
 
   const trunk: Branch = {
     ...walk(random, {
       x: 0,
-      y: 0,
+      // Starts below the ground, inside the taproot, so no notch shows at the ground line.
+      y: -2,
       heading: 90,
       target: 90,
-      length: 68,
-      w0: 5.4,
-      w1: 0.8,
+      length: 70,
+      w0: 6.4,
+      w1: 0.9,
       steps: 22,
       wander: 7,
     }),
@@ -136,7 +141,7 @@ export function generatePlant(seed = 2026): Plant {
         heading: base + side * 16,
         target: base + side * spec.spread,
         length: spec.length,
-        w0: Math.max(parent.widths[index] * 0.66, 0.35),
+        w0: Math.max(parent.widths[index] * 0.72, 0.4),
         w1: 0.12,
         steps: spec.steps,
         wander: 12,
@@ -206,13 +211,16 @@ export function generatePlant(seed = 2026): Plant {
     { at: 0.66, side: 1, spread: 36, length: 24, kind: null },
     { at: 0.82, side: 1, spread: 44, length: 24, kind: null },
     { at: 0.9, side: -1, spread: 30, length: 18, kind: null },
+    { at: 0.5, side: 1, spread: 40, length: 28, kind: null },
+    { at: 0.62, side: -1, spread: 34, length: 28, kind: null },
+    { at: 0.97, side: 1, spread: 16, length: 18, kind: null },
   ];
 
   for (const [order, limb] of limbs.entries()) {
     const main = grow(trunk, limb.at, limb.side, {
       spread: limb.spread,
       length: limb.length,
-      born: 0.42 + order * 0.015,
+      born: 0.42 + order * 0.012,
       dur: 0.14,
       depth: 1,
       kind: limb.kind,
@@ -231,7 +239,32 @@ export function generatePlant(seed = 2026): Plant {
         kind: limb.kind,
         steps: 8,
       });
-      addLeaves(twig, 11, () => between(0.58, 0.65), false);
+      addLeaves(twig, 12, () => between(0.58, 0.65), false);
+      for (const [x, y, radius] of [
+        [twig.xs.at(-1)!, twig.ys.at(-1)!, between(8, 12)],
+        [twig.xs[4], twig.ys[4], between(6, 9)],
+      ]) {
+        foliage.push({ x, y, radius });
+        // Leaves all around each mass, so its edge reads as foliage and not as a circle.
+        for (let n = 0; n < 8; n++) {
+          const angle = random() * Math.PI * 2;
+          const reach = radius * (0.45 + random() * 0.6);
+          const start = between(0.6, 0.66);
+          leaves.push({
+            x: x + Math.cos(angle) * reach,
+            y: y + Math.sin(angle) * reach,
+            angle: angle / TO_RADIANS + between(-35, 35),
+            size: between(4, 6),
+            hue: 3,
+            born: start,
+            fall: between(Math.max(DRY_START, start + 0.02), DRY_END - 0.02),
+            regrow: between(DRY_END + 0.03, 0.97),
+            drift: between(-16, 16),
+            phase: random() * Math.PI * 2,
+            kind: limb.kind,
+          });
+        }
+      }
 
       // Grows only after the dry season: the plant comes back larger.
       for (const lateSide of [-1, 1]) {
@@ -244,7 +277,7 @@ export function generatePlant(seed = 2026): Plant {
           kind: limb.kind,
           steps: 6,
         });
-        addLeaves(late, 9, () => between(0.87, 0.97), true);
+        addLeaves(late, 6, () => between(0.87, 0.97), true);
       }
     }
   }
@@ -273,7 +306,7 @@ export function generatePlant(seed = 2026): Plant {
     return branch;
   }
 
-  const taproot = root(0, 0, -92, 19, 6.8, 0.02, 0);
+  const taproot = root(0, 0, -92, 19, 8.2, 0.02, 0);
   const laterals: [number, number][] = [
     [-160, 19],
     [-22, 21],
@@ -299,5 +332,15 @@ export function generatePlant(seed = 2026): Plant {
     }
   }
 
-  return { branches, roots, leaves };
+  // Light comes from the upper right: leaves there are brighter, and the shaded ones are drawn first.
+  const crown = leaves.filter((leaf) => leaf.born > 0.5);
+  const lowest = Math.min(...crown.map((leaf) => leaf.y));
+  const highest = Math.max(...crown.map((leaf) => leaf.y));
+  for (const leaf of crown) {
+    const light = ((leaf.y - lowest) / (highest - lowest)) * 0.5 + ((leaf.x + 60) / 120) * 0.2 + random() * 0.4;
+    leaf.hue = light > 0.84 ? 0 : light > 0.62 ? 1 : light > 0.4 ? 2 : 3;
+  }
+  leaves.sort((a, b) => b.hue - a.hue);
+
+  return { branches, roots, leaves, foliage };
 }
