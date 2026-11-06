@@ -1,3 +1,4 @@
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { deleteEverything, launch, signIn, signOut, skipWithoutUsers } from "./session";
 
@@ -48,6 +49,34 @@ test("a purchase made long ago shows the dividends it received", async ({ page }
     await expect(income.getByText(/em 15\/03\/2024/)).toBeVisible();
     const row = page.getByRole("row").filter({ hasText: "ITUB4" });
     await expect(row.getByRole("cell").nth(6)).toHaveText(/R\$\s[1-9][\d.,]*/);
+  } finally {
+    await deleteEverything(page);
+  }
+});
+
+test("the B3 statement is previewed, saved once and not twice", async ({ page }) => {
+  skipWithoutUsers();
+  await signIn(page, "A");
+  const file = path.join(__dirname, "fixtures", "negociacao.xlsx");
+  try {
+    await deleteEverything(page);
+    await page.goto("/carteira");
+    await page.getByRole("link", { name: "Importar da B3" }).click();
+    const form = page.getByRole("region", { name: "Importar extrato" });
+    await form.getByLabel("Extrato de negociação (.xlsx)").setInputFiles(file);
+    await expect(form.getByText("4 operações lidas, 3 para lançar.")).toBeVisible();
+    await expect(form.getByRole("row").filter({ hasText: "ZZZZ3" })).toContainText("Fora da lista do site");
+    await expect(form.getByText(/Linha 5: Mercado “Opção de Compra”/)).toBeVisible();
+    await form.getByRole("button", { name: "Lançar 3 operações" }).click();
+    await expect(form.getByRole("status")).toContainText("3 operações salvas.");
+
+    await page.reload();
+    await form.getByLabel("Extrato de negociação (.xlsx)").setInputFiles(file);
+    await expect(form.getByText("4 operações lidas, 0 para lançar.")).toBeVisible();
+    await expect(form.getByRole("button", { name: "Lançar 0 operações" })).toBeDisabled();
+
+    await page.goto("/carteira");
+    await expect(page.getByRole("row").filter({ hasText: "ITUB4" }).getByRole("cell").nth(1)).toHaveText(/^6(,\d+)?$/); // later bonus shares raise it
   } finally {
     await deleteEverything(page);
   }
@@ -238,7 +267,11 @@ test("the user pages fit a phone", async ({ page }) => {
   await signIn(page, "A");
   try {
     await deleteEverything(page);
-    for (const path of ["/carteira", "/carteira/lancar", "/questionario", "/conta"]) await fits(path);
+    for (const path of ["/carteira", "/carteira/lancar", "/carteira/importar", "/questionario", "/conta"]) await fits(path);
+    await page.goto("/carteira/importar");
+    await page.getByLabel("Extrato de negociação (.xlsx)").setInputFiles(path.join(__dirname, "fixtures", "negociacao.xlsx"));
+    await expect(page.getByText(/Vai entrar/).first()).toBeVisible(); // the status shows on a phone too
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
 
     await page.goto("/carteira/lancar");
     await launch(page, { asset: "ITUB4", operation: "Compra", quantity: "10", price: "30", date: "2024-03-15" });

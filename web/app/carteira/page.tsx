@@ -32,6 +32,9 @@ export default async function CarteiraPage() {
           <Link href="/carteira/lancar" className={LINK}>
             Lançar
           </Link>
+          <Link href="/carteira/importar" className={LINK}>
+            Importar da B3
+          </Link>
           <Link href="/conta" className={LINK}>
             Conta
           </Link>
@@ -63,6 +66,9 @@ export default async function CarteiraPage() {
           <div className="flex flex-wrap gap-4">
             <Link href="/carteira/lancar" className={LINK}>
               Lançar a primeira compra
+            </Link>
+            <Link href="/carteira/importar" className={LINK}>
+              Importar o extrato da B3
             </Link>
             <Link href="/demo/ana" className={LINK}>
               Ver carteira de exemplo

@@ -32,9 +32,14 @@ export default async function LancarPage() {
           A quantidade e o preço são os da data da operação. Desdobramentos posteriores são
           corrigidos automaticamente.
         </p>
-        <Link href="/carteira" className="text-sm text-accent underline-offset-2 hover:underline">
-          Ver minha carteira
-        </Link>
+        <nav aria-label="Ações da carteira" className="flex gap-4 text-sm">
+          <Link href="/carteira" className="text-accent underline-offset-2 hover:underline">
+            Ver minha carteira
+          </Link>
+          <Link href="/carteira/importar" className="text-accent underline-offset-2 hover:underline">
+            Importar da B3
+          </Link>
+        </nav>
       </header>
 
       <section className="space-y-3">

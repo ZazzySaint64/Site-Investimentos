@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { ActionResult } from "@/lib/action-result";
+import { inSavingOrder } from "@/lib/b3-extract";
 import { requireUser } from "@/lib/supabase/server";
 import {
   addFixedIncome,
@@ -64,4 +65,40 @@ export async function deleteTransactionAction(id: number): Promise<FormState> {
 export async function deleteFixedIncomeAction(id: number): Promise<FormState> {
   await requireUser();
   return finish(await deleteFixedIncome(id), {});
+}
+
+export type ImportRow = { line: number; ticker: string; type: "buy" | "sell"; quantity: number; price: number; date: string };
+export type ImportResult = { saved: number; failed: { line: number; message: string }[] };
+
+const MAX_IMPORT = 2000;
+
+function validRow(row: ImportRow): boolean {
+  return (
+    Number.isInteger(row?.line) &&
+    typeof row.ticker === "string" &&
+    /^[A-Z0-9]{4,12}$/.test(row.ticker) &&
+    (row.type === "buy" || row.type === "sell") &&
+    Number.isFinite(row.quantity) &&
+    row.quantity > 0 &&
+    Number.isFinite(row.price) &&
+    row.price > 0 &&
+    /^\d{4}-\d{2}-\d{2}$/.test(row.date)
+  );
+}
+
+/** Saves each row in date order, purchases first on the same day. A failed row does not stop the rest. */
+export async function importTransactionsAction(rows: ImportRow[]): Promise<ImportResult> {
+  await requireUser();
+  if (!Array.isArray(rows) || rows.length > MAX_IMPORT || !rows.every(validRow)) {
+    return { saved: 0, failed: [{ line: 0, message: `Arquivo inválido ou com mais de ${MAX_IMPORT} linhas.` }] };
+  }
+  const result: ImportResult = { saved: 0, failed: [] };
+  // ponytail: one call per row, not atomic; a database function would save all or nothing
+  for (const row of inSavingOrder(rows)) {
+    const outcome = await addTransaction(row);
+    if (outcome.ok) result.saved++;
+    else result.failed.push({ line: row.line, message: outcome.message });
+  }
+  if (result.saved) revalidatePath("/carteira", "layout");
+  return result;
 }
