@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { CheckForm } from "@/components/CheckForm";
 import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
 import { getAssets, getDemoPersonas, getDemoTransactions, getPrices, type AssetRow } from "@/lib/data";
@@ -260,14 +261,12 @@ export default function Home() {
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-12 lg:items-center lg:py-14">
           <div className="space-y-4 lg:col-span-7">
             <p className="max-w-[44ch] text-lg leading-snug sm:text-xl">
-              Veja como cada investimento se comportou e o que os números querem dizer, com dados
-              públicos e sem jargão.
+              Recebeu uma indicação? Confira o que o investimento é, o que pode dar errado e como foi
+              até aqui, com dados públicos e sem ninguém tentando vender nada.
             </p>
+            <CheckForm tone="lime" />
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              <Link
-                href="/demo/ana"
-                className="rounded-full bg-forest px-5 py-3 font-semibold text-lime hover:bg-accent"
-              >
+              <Link href="/demo/ana" className="font-semibold underline-offset-4 hover:underline">
                 Ver carteira de exemplo
               </Link>
               <Link href="/dados" className="font-semibold underline-offset-4 hover:underline">

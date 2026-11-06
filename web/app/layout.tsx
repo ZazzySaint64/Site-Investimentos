@@ -62,6 +62,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </Link>
                 </li>
                 <li>
+                  <Link href="/conferir" className={FOOT_LINK}>
+                    Conferir um investimento
+                  </Link>
+                </li>
+                <li>
                   <Link href="/dados" className={FOOT_LINK}>
                     Ativos
                   </Link>

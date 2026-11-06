@@ -92,7 +92,7 @@ export function QuestionnaireForm({ saved }: { saved: Profile | null }) {
           <h2 className="text-lg font-semibold">Seu perfil: {PROFILE_LABEL[risk]}</h2>
           <input type="hidden" name="risk_profile" value={risk} />
           <p className="text-sm text-text-soft">
-            Meta sugerida de <Term name="alocacao">alocação</Term>. Você pode ajustar cada número.
+            Meta sugerida de <Term name="alocacao">alocação</Term>. A divisão por perfil é escolha do site, não regra oficial: cada instituição usa a sua. Você pode ajustar cada número.
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {TARGET_CLASSES.map((name) => (

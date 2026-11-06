@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DataDate } from "@/components/DataFreshness";
 import { Term } from "@/components/Term";
 import { getAssets, getMacroSummary, getRuns, type JobRun } from "@/lib/data";
@@ -75,6 +76,12 @@ export default async function DataPage() {
         <p className="text-sm text-text-soft">
           Veja como cada investimento se comportou e clique em um deles para entender melhor. Toque
           nas palavras sublinhadas para ver o que significam.
+        </p>
+        <p className="text-sm">
+          Recebeu uma indicação?{" "}
+          <Link href="/conferir" className="font-semibold text-accent underline-offset-2 hover:underline">
+            Conferir um investimento
+          </Link>
         </p>
         <DataDate />
       </header>

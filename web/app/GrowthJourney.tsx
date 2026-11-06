@@ -30,7 +30,7 @@ const STAGES = [
   {
     name: "Broto",
     title: "Depois, a constância",
-    text: "Investir um pouco todo mês cria o hábito e diminui o peso de acertar o dia certo.",
+    text: "Investir parte do salário todo mês cria o hábito e tira o peso de escolher o dia certo.",
   },
   {
     name: "Galhos",

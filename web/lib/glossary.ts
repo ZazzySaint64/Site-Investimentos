@@ -7,7 +7,7 @@ export const GLOSSARY = {
   },
   volatilidade: {
     title: "Oscilação (volatilidade)",
-    text: "Mostra o quanto o preço sobe e desce. Quanto maior, mais sustos no caminho, para cima e para baixo. Até 15% ao ano é baixa, de 15% a 30% é média e acima disso é alta.",
+    text: "Mostra o quanto o preço sobe e desce. Quanto maior, mais sustos no caminho, para cima e para baixo. O site chama de baixa até 15% ao ano, de média de 15% a 30% e de alta acima disso. São faixas escolhidas pelo site para comparar, sem regra oficial.",
   },
   queda: {
     title: "Maior queda",
@@ -15,11 +15,11 @@ export const GLOSSARY = {
   },
   sharpe: {
     title: "Retorno pelo risco (Sharpe)",
-    text: "Compara o que o ativo rendeu acima do CDI com o quanto ele oscilou. Negativo: rendeu menos que o CDI. Acima de 1: rendeu bem para o risco que teve.",
+    text: "Compara o que o ativo rendeu acima do CDI com o quanto ele oscilou. Negativo: rendeu menos que o CDI. Acima de 1, o site diz que rendeu bem para o risco. Essa faixa é costume de mercado, não regra oficial.",
   },
   correlacao: {
     title: "Relação com o Ibovespa (correlação)",
-    text: "Vai de −1 a +1. Perto de +1, o ativo costuma subir e cair junto com a bolsa. Perto de zero, um não diz muito sobre o outro.",
+    text: "Vai de −1 a +1. Perto de +1, o ativo costuma subir e cair junto com a bolsa. Perto de zero, um não diz muito sobre o outro. Nas frases, o site usa 0,3 e 0,7 como limites.",
   },
   proventos: {
     title: "Proventos",
