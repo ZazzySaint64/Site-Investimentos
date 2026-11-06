@@ -159,3 +159,27 @@ Foram poucas medições, então os valores servem como ordem de grandeza.
 **Erro na publicação:** o primeiro deploy falhou com `Next.js encountered uncached or runtime data during prerendering`. A causa provável foi um valor errado nas variáveis da Vercel: no commit que falhou, `SUPABASE_URL` inexistente ou com espaço no final reproduz o mesmo erro em `/`. O valor exato não foi confirmado. O site passou a funcionar depois que as variáveis foram corrigidas.
 
 A primeira correção, com `Suspense` em `/` e `instant = false` em `/dados`, deixou o build passar e escondeu o problema, porque as telas com dados continuaram em erro. Ela foi mantida para que a tela inicial abra com o banco fora. O custo é que uma variável errada não impede mais o deploy, então é preciso conferir a URL pública depois de mudar uma variável.
+
+## Fase 3
+
+Publicada em https://site-investimentos-gray.vercel.app em 2026-11-06, a partir de `main` (`c32351e`). Nenhuma variável nova na Vercel.
+
+Entraram login por e-mail e senha, questionário de perfil, lançamento de compras, vendas e renda fixa, importação do extrato de negociação da B3, carteira própria com proventos e comparação com CDI e IPCA, "Por onde começar", reserva de emergência, simulador de aportes, "Conferir um investimento" e links para o Status Invest e a B3.
+
+Antes do envio: lint sem erros, 120 testes unitários passando e `next build` sem erro nas 21 rotas.
+
+Tempos medidos por `curl`, de um computador no Brasil, três visitas por página, logo depois do deploy:
+
+| Medida | Valor |
+|---|---:|
+| `/` | 0,7 a 3,0 s (a mais lenta foi a primeira) |
+| `/demo/ana` | 0,4 a 0,7 s |
+| `/dados/PETR4` | 0,5 a 1,6 s |
+| `/comecar`, `/primeiros-passos`, `/conferir` | 0,3 a 0,7 s |
+| Tamanho do banco | 62 MB |
+| Preços | 279.109 linhas |
+| Proventos | 3.657 linhas |
+
+**Conferido na URL pública, sem login:** 12 páginas respondem 200. A carteira de exemplo mostra os proventos e a comparação com CDI e IPCA. `/carteira/importar` leva a `/entrar`. Oito páginas na largura de 375 px não têm rolagem horizontal e não deram erro de JavaScript. O celular foi simulado no Chromium.
+
+**Não conferido:** o tempo de `/carteira` com login, o cadastro real com confirmação por e-mail e a recuperação de senha na URL pública, o provedor e o limite do SMTP, um celular físico e a importação com um extrato real da B3. O autor informou que configurou Site URL, Redirect URLs e SMTP no Supabase. Pela API pública, só foi possível confirmar que a confirmação de e-mail está ligada.

@@ -8,9 +8,9 @@ Um site que trabalha com dados de investimentos, focado em pessoas leigas: carte
 
 ## Estado atual
 
-O job de dados está pronto. O site já tem tela inicial, carteira de exemplo sem login, lista de ativos com busca, página de cada ativo com explicações e glossário. Também já existem login, questionário, lançamento de compras e vendas e de renda fixa, painel da carteira própria e a posição de cada ativo. Cada pessoa vê só os próprios dados. Simulador e assistente vêm nas próximas fases.
+O job de dados está pronto. O site já tem tela inicial, carteira de exemplo sem login, lista de ativos com busca, página de cada ativo com explicações e glossário. Também já existem login, questionário, lançamento de compras e vendas e de renda fixa, importação do extrato de negociação da B3, painel da carteira própria e a posição de cada ativo. A carteira mostra os proventos recebidos e compara o dinheiro investido com o mesmo valor no CDI e corrigido pelo IPCA. Há ainda o caminho "Por onde começar", a calculadora de reserva, o simulador de aportes, a tela "Conferir um investimento" e links de cada ativo para o Status Invest e a B3. Cada pessoa vê só os próprios dados. Simulador de carteira e assistente vêm nas próximas fases.
 
-O cadastro por e-mail precisa de um SMTP (a Brevo, por exemplo) configurado no painel do Supabase; sem ele, o Supabase limita o envio de e-mails de confirmação.
+O cadastro por e-mail usa um SMTP configurado no painel do Supabase. Sem ele, o Supabase só envia e-mails de confirmação para a equipe do projeto.
 
 Este site foi construído com o Claude, sob a direção do autor.
 
