@@ -164,6 +164,20 @@ export function getDividends(ticker: string): Promise<Dividend[]> {
   );
 }
 
+/** Payments of several assets at once, by ticker. Assets with none saved get an empty list. */
+export async function getDividendsByTicker(tickers: string[]): Promise<Map<string, Dividend[]>> {
+  const byTicker = new Map<string, Dividend[]>(tickers.map((ticker) => [ticker, []]));
+  if (!tickers.length) return byTicker;
+  const list = tickers.map(encodeURIComponent).join(",");
+  const rows = await getAllPages<Dividend & { assets: { ticker: string } }>(
+    `/dividends?select=date,amount,assets!inner(ticker)&assets.ticker=in.(${list})&order=date`,
+  );
+  for (const row of rows) {
+    byTicker.get(row.assets.ticker)?.push({ date: row.date, amount: Number(row.amount) });
+  }
+  return byTicker;
+}
+
 export async function getFiiReports(
   ticker: string,
 ): Promise<{ months: FiiMonth[]; quarter: FiiQuarter | null }> {

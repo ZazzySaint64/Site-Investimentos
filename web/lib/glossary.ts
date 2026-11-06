@@ -25,6 +25,10 @@ export const GLOSSARY = {
     title: "Proventos",
     text: "Dinheiro que o ativo paga a quem o possui, como dividendos de ações e rendimentos de fundos imobiliários.",
   },
+  data_com: {
+    title: "Data-com",
+    text: "Último dia em que quem tem o ativo ganha direito ao provento. Quem compra no dia seguinte (a data ex) não recebe aquele pagamento. O dinheiro cai depois, na data de pagamento.",
+  },
   cdi: {
     title: "CDI",
     text: "Taxa de juros usada como régua da renda fixa. Muitos investimentos conservadores prometem render um percentual dela.",

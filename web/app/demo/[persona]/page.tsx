@@ -2,11 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { DataDate } from "@/components/DataFreshness";
-import { AllocationList, PROFILE_LABELS, PortfolioSummary, PositionsTable } from "@/components/PortfolioPanel";
+import {
+  AllocationList,
+  IncomeSection,
+  PROFILE_LABELS,
+  PortfolioSummary,
+  PositionsTable,
+} from "@/components/PortfolioPanel";
 import { Term } from "@/components/Term";
 import { getDemoPersonas, getDemoTransactions } from "@/lib/data";
+import { getIncome } from "@/lib/income";
 import { computePortfolio, hasLaterSplit } from "@/lib/portfolio";
-import { formatDate, formatMoney, formatQuantity } from "@/lib/phrases";
+import { formatDate, formatMoney, formatQuantity, todayInBrazil } from "@/lib/phrases";
 
 // Each persona reads the database on request, so this page cannot be prerendered.
 export const instant = false;
@@ -26,6 +33,7 @@ export default async function DemoPage({ params }: Props) {
   if (!persona) notFound();
 
   const portfolio = computePortfolio(transactions);
+  const income = await getIncome(transactions, portfolio, todayInBrazil());
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
@@ -64,9 +72,14 @@ export default async function DemoPage({ params }: Props) {
         <DataDate />
       </header>
 
-      <PortfolioSummary portfolio={portfolio} note="Proventos não entram nesta conta." />
+      <PortfolioSummary
+        portfolio={portfolio}
+        income={income}
+        note="O resultado conta preço e vendas; a linha de proventos soma o que os ativos pagaram."
+      />
+      <IncomeSection income={income} />
       <AllocationList portfolio={portfolio} />
-      <PositionsTable portfolio={portfolio} />
+      <PositionsTable portfolio={portfolio} income={income} />
 
       <details className="rounded-lg border border-border bg-surface p-4 text-sm">
         <summary className="cursor-pointer text-text-soft">Ver compras e vendas</summary>

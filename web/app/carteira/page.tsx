@@ -2,11 +2,14 @@ import Link from "next/link";
 import { DataDate } from "@/components/DataFreshness";
 import {
   AllocationList,
+  IncomeSection,
   PROFILE_LABELS,
   PortfolioSummary,
   PositionsTable,
 } from "@/components/PortfolioPanel";
 import { Term } from "@/components/Term";
+import { getIncome } from "@/lib/income";
+import { todayInBrazil } from "@/lib/phrases";
 import { getWallet } from "@/lib/wallet";
 
 // The page reads the session cookie, so it cannot be prerendered.
@@ -19,6 +22,7 @@ const LINK = "text-sm text-accent underline-offset-2 hover:underline";
 export default async function CarteiraPage() {
   const { portfolio, transactions, fixedIncome, profile } = await getWallet();
   const empty = transactions.length === 0 && fixedIncome.length === 0;
+  const income = transactions.length ? await getIncome(transactions, portfolio, todayInBrazil()) : null;
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-4 sm:px-8 py-8">
@@ -69,12 +73,16 @@ export default async function CarteiraPage() {
         <>
           <PortfolioSummary
             portfolio={portfolio}
-            note="Proventos não entram nesta conta. Renda fixa aparece em valor bruto, sem imposto."
+            income={income}
+            note="O resultado conta preço e vendas; a linha de proventos soma o que os ativos pagaram. Renda fixa aparece em valor bruto, sem imposto."
           />
+          {transactions.length > 0 && (
+            <IncomeSection income={income} hasFixedIncome={fixedIncome.length > 0} />
+          )}
           {portfolio.positions.length > 0 && (
             <>
               <AllocationList portfolio={portfolio} />
-              <PositionsTable portfolio={portfolio} />
+              <PositionsTable portfolio={portfolio} income={transactions.length ? income : undefined} />
             </>
           )}
         </>

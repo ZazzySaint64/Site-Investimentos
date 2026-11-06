@@ -29,6 +29,30 @@ test("a purchase is saved, an impossible sale shows the rule, and deleting clear
   }
 });
 
+test("a purchase made long ago shows the dividends it received", async ({ page }) => {
+  skipWithoutUsers();
+  await signIn(page, "A");
+  try {
+    await page.goto("/carteira/lancar");
+    await launch(page, {
+      asset: "ITUB4",
+      operation: "Compra",
+      quantity: "10",
+      price: "30",
+      date: "2024-03-15",
+    });
+    await expect(page.getByRole("listitem").filter({ hasText: "Itaú" })).toBeVisible();
+    await page.goto("/carteira");
+    const income = page.getByRole("region", { name: "Proventos e comparação" });
+    await expect(income.getByText(/Mesmo dinheiro no/)).toBeVisible();
+    await expect(income.getByText(/em 15\/03\/2024/)).toBeVisible();
+    const row = page.getByRole("row").filter({ hasText: "ITUB4" });
+    await expect(row.getByRole("cell").nth(6)).toHaveText(/R\$\s[1-9][\d.,]*/);
+  } finally {
+    await deleteEverything(page);
+  }
+});
+
 test("an empty wallet invites to launch or see the demo", async ({ page }) => {
   skipWithoutUsers();
   await signIn(page, "A");

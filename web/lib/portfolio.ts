@@ -40,6 +40,7 @@ export type Portfolio = {
   value: number; // only positions with a price
   result: number; // open result of positions with a price + realized on sales
   resultShare: number; // result / total bought; 0 if nothing was bought
+  bought: number; // total bought of positions with a price, sold ones and extras
   realized: number;
   allocation: { assetClass: string; value: number; share: number }[]; // largest first
   missingPrices: string[];
@@ -47,7 +48,8 @@ export type Portfolio = {
 
 const EMPTY_QUANTITY = 1e-6;
 
-function laterSplitFactor(transaction: Transaction): number {
+/** Shares of today per share on the transaction day, after the splits that came later. */
+export function laterSplitFactor(transaction: Transaction): number {
   return transaction.asset.splits
     .filter((split) => split.date > transaction.date)
     .reduce((factor, split) => factor * split.ratio, 1);
@@ -151,6 +153,7 @@ export function computePortfolio(transactions: Transaction[], extras: Position[]
     value,
     result,
     resultShare: bought > 0 ? result / bought : 0,
+    bought,
     realized,
     allocation: [...byClass.entries()]
       .map(([assetClass, classValue]) => ({

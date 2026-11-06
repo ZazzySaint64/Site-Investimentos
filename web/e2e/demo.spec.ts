@@ -130,3 +130,19 @@ test("the leaves stay on the tree on a scaled screen", async ({ browser, baseURL
     await context.close();
   }
 });
+
+test("the example wallet shows the dividends and the same money in the CDI and the IPCA", async ({
+  page,
+}) => {
+  await page.goto("/demo/ana");
+  const income = page.getByRole("region", { name: "Proventos e comparação" });
+  await expect(income.getByText(/nos últimos 12 meses/)).toBeVisible();
+  await expect(
+    income.getByText(/Ficou R\$\s[\d.,]+ (acima|abaixo) do CDI|igual ao CDI/),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Resumo da carteira" }).getByText("Com os"),
+  ).toBeVisible();
+  const row = page.getByRole("row").filter({ hasText: "HGLG11" });
+  await expect(row.getByRole("cell").nth(6)).toHaveText(/R\$\s[\d.,]+/);
+});

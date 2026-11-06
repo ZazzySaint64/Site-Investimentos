@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { Term } from "@/components/Term";
+import type { Income } from "@/lib/income";
 import type { Portfolio } from "@/lib/portfolio";
 import {
   CLASS_LABELS,
   formatDate,
   formatMoney,
+  formatMonthYear,
   formatPercent,
   formatQuantity,
   formatSignedMoney,
@@ -25,7 +27,16 @@ const WIDE_HEADER_CELL = `${HEADER_CELL} hidden lg:table-cell`;
 const WIDE_CELL = "hidden px-4 py-3 text-right tabular-nums lg:table-cell";
 
 /** The three figures, the note under them and the missing-price warning. */
-export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; note: string }) {
+export function PortfolioSummary({
+  portfolio,
+  note,
+  income,
+}: {
+  portfolio: Portfolio;
+  note: string;
+  income?: Income | null;
+}) {
+  const withDividends = income ? portfolio.result + income.total : null;
   return (
     <section aria-label="Resumo da carteira" className="space-y-2">
       <div className="grid gap-3 sm:grid-cols-3">
@@ -45,6 +56,17 @@ export function PortfolioSummary({ portfolio, note }: { portfolio: Portfolio; no
             {formatSignedPercent(portfolio.resultShare)} sobre o total comprado
           </p>
           <p className="mt-1 text-sm text-text-soft">{resultPhrase(portfolio.result)}</p>
+          {withDividends !== null && (
+            <p className="mt-2 border-t border-border pt-2 tabular-nums text-sm">
+              Com os <Term name="proventos">proventos</Term>: {formatSignedMoney(withDividends)}
+              {portfolio.bought > 0 && (
+                <span className="text-text-soft">
+                  {" "}
+                  ({formatSignedPercent(withDividends / portfolio.bought)})
+                </span>
+              )}
+            </p>
+          )}
         </div>
         <div className="rounded-lg border border-border bg-surface p-4">
           <p className="text-xs text-muted">Quanto está investido</p>
@@ -88,7 +110,20 @@ export function AllocationList({ portfolio }: { portfolio: Portfolio }) {
   );
 }
 
-export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
+// Tesouro and fixed income pay no dividends; a missing payment list is said, never shown as zero.
+function dividendCell(ticker: string, assetClass: string, income: Income | null): string {
+  if (assetClass === "tesouro" || assetClass === "renda_fixa") return "—";
+  const received = income?.received.get(ticker);
+  return received ? formatMoney(received.total) : "não informado";
+}
+
+export function PositionsTable({
+  portfolio,
+  income,
+}: {
+  portfolio: Portfolio;
+  income?: Income | null;
+}) {
   const today = todayInBrazil();
   return (
     <section aria-labelledby="posicoes" className="space-y-3">
@@ -121,6 +156,11 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
               <th scope="col" className={HEADER_CELL}>
                 Resultado
               </th>
+              {income !== undefined && (
+                <th scope="col" className={WIDE_HEADER_CELL}>
+                  <Term name="proventos">Proventos</Term>
+                </th>
+              )}
               <th scope="col" className={WIDE_HEADER_CELL}>
                 Parte da carteira
               </th>
@@ -171,6 +211,9 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
                   <td className="px-2 py-3 text-right tabular-nums sm:px-4">
                     {formatSignedMoney(position.result)}
                   </td>
+                  {income !== undefined && (
+                    <td className={WIDE_CELL}>{dividendCell(position.ticker, position.assetClass, income)}</td>
+                  )}
                   <td className={WIDE_CELL}>{formatPercent(position.share)}</td>
                 </tr>
               );
@@ -178,6 +221,102 @@ export function PositionsTable({ portfolio }: { portfolio: Portfolio }) {
           </tbody>
         </table>
       </div>
+    </section>
+  );
+}
+
+const DIVIDENDS_SINCE = "2016-11-01"; // first payment saved in the database
+
+function gap(wallet: number, index: number | null, name: string): string {
+  if (index === null) return `Comparação com o ${name}: não informado.`;
+  const difference = wallet - index;
+  if (Math.abs(difference) < 0.005 * index) return `Ficou praticamente igual ao ${name}.`;
+  return `Ficou ${formatMoney(Math.abs(difference))} ${difference > 0 ? "acima" : "abaixo"} do ${name}.`;
+}
+
+/** Dividends received and what the same money would be in the CDI and corrected by the IPCA. */
+export function IncomeSection({
+  income,
+  hasFixedIncome = false,
+}: {
+  income: Income | null;
+  hasFixedIncome?: boolean;
+}) {
+  return (
+    <section aria-labelledby="proventos" className="space-y-3">
+      <h2 id="proventos" className="text-2xl">
+        Proventos e comparação
+      </h2>
+      {income === null ? (
+        <p className="text-sm text-text-soft">
+          Proventos e comparação: não informado. Os dados não puderam ser lidos agora, ou nenhum
+          ativo lançado tem preço.
+        </p>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <p className="text-xs text-muted">
+                <Term name="proventos">Proventos</Term> recebidos
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">{formatMoney(income.total)}</p>
+              <p className="tabular-nums text-sm text-text-soft">
+                {formatMoney(income.lastYear)} nos últimos 12 meses
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <p className="text-xs text-muted">
+                Mesmo dinheiro no <Term name="cdi">CDI</Term>
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {income.cdi === null ? "não informado" : formatMoney(income.cdi)}
+              </p>
+              <p className="text-sm text-text-soft">
+                Se cada compra tivesse ido para o CDI no mesmo dia, e cada venda saído de lá.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-surface p-4">
+              <p className="text-xs text-muted">
+                Mesmo dinheiro corrigido pelo <Term name="ipca">IPCA</Term>
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {income.ipca === null ? "não informado" : formatMoney(income.ipca)}
+              </p>
+              <p className="text-sm text-text-soft">
+                Quanto seria preciso hoje para comprar o mesmo que o dinheiro comprava antes.
+              </p>
+            </div>
+          </div>
+          <p className="text-sm">
+            Sua carteira hoje, somando os proventos:{" "}
+            <strong className="tabular-nums font-semibold">{formatMoney(income.wallet)}</strong>.{" "}
+            {gap(income.wallet, income.cdi, "CDI")} {gap(income.wallet, income.ipca, "IPCA")}
+          </p>
+          <ul className="list-disc space-y-1 pl-5 text-xs text-muted">
+            <li>
+              Comparação calculada pelo site, desde a primeira compra, em {formatDate(income.since)}.
+              Mostra o caminho até aqui, não o que vai acontecer.
+            </li>
+            <li>
+              Cada provento conta pela <Term name="data_com">data-com</Term>: o dinheiro pode cair
+              semanas depois. Os proventos entram sem render juros, o que deixa a carteira um pouco
+              abaixo do que seria se tivessem sido reinvestidos. No{" "}
+              <Term name="jcp">JCP</Term>, o valor pode estar antes do imposto retido na fonte.
+            </li>
+            {income.since < DIVIDENDS_SINCE && (
+              <li>O site só tem proventos a partir de novembro de 2016. Os anteriores não entram.</li>
+            )}
+            {hasFixedIncome && (
+              <li>A renda fixa lançada fica de fora da comparação, porque já rende uma parte do CDI.</li>
+            )}
+            <li>
+              Proventos: Yahoo Finance. CDI e IPCA: Banco Central
+              {income.cdiUntil && `, CDI até ${formatDate(income.cdiUntil)}`}
+              {income.ipcaUntil && `, IPCA até ${formatMonthYear(income.ipcaUntil)}`}.
+            </li>
+          </ul>
+        </>
+      )}
     </section>
   );
 }
