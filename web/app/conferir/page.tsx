@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckForm } from "@/components/CheckForm";
+import { ExternalSources } from "@/components/ExternalSources";
 import { Term } from "@/components/Term";
 import { findAssets } from "@/lib/check";
 import {
@@ -267,6 +268,7 @@ async function Answer({ asset }: { asset: AssetRow }) {
         >
           Ver todos os números deste investimento
         </Link>
+        <ExternalSources ticker={asset.ticker} assetClass={asset.class} />
       </Question>
     </div>
   );

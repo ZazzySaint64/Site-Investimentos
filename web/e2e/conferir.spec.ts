@@ -40,3 +40,14 @@ test("the check page fits a phone", async ({ page }) => {
   const width = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(width).toBeLessThanOrEqual(375);
 });
+
+test("a fund links to Status Invest and B3 for a second look", async ({ page }) => {
+  await page.goto("/conferir?ativo=HGLG11");
+  await expect(page.getByRole("link", { name: "Status Invest" })).toHaveAttribute(
+    "href",
+    "https://statusinvest.com.br/fundos-imobiliarios/hglg11",
+  );
+  await expect(page.getByRole("link", { name: "B3" })).toHaveAttribute("href", /b3\.com\.br.+fiis-listados/);
+  await page.goto("/dados/PETR4");
+  await expect(page.getByRole("link", { name: "Status Invest" })).toHaveAttribute("href", /\/acoes\/petr4$/);
+});

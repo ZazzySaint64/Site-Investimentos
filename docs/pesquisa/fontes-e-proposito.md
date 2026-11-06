@@ -96,6 +96,17 @@ O uso 1 é o mais forte, porque responde ao problema da seção 2 e usa quase s�
 | Glossário | [Portal do Investidor da CVM](https://www.gov.br/investidor/pt-br), [B3 Edu](https://edu.b3.com.br/) e ANBIMA, conforme a pesquisa anterior | Revisar cada verbete contra uma dessas e guardar o link |
 | Reserva de emergência | [Caderno de Cidadania Financeira do Banco Central](https://www.bcb.gov.br/pre/pef/port/caderno_cidadania_financeira.pdf) | A faixa de 3 a 6 meses de despesas é atribuída ao Banco Central [por fonte secundária](https://olhardigital.com.br/2026/04/21/curiosidades/quanto-polpar-para-montar-uma-reserva-de-emergencia/) **[A verificar no caderno]**. O site não cita número, o que está certo até conferir |
 
+### Status Invest e B3, pedidas pelo autor
+
+Conferido em 2026-11-05.
+
+| Fonte | O que os termos dizem | Como o site usa |
+|---|---|---|
+| **B3** | A [página de cotações históricas](https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/market-data/historico/mercado-a-vista/cotacoes-historicas/) diz que os dados destinam-se "estritamente à consulta informativa" e que é vedada a coleta automatizada, "para quaisquer finalidades, comerciais ou não". Os [Termos de Uso](https://www.b3.com.br/pt_br/termos-de-uso-e-protecao-de-dados/termos-de-uso/) permitem só uso pessoal e vedam distribuir dados de mercado sem autorização escrita **[Oficial]** | Só links: a lista oficial de FIIs e a de empresas listadas, nas páginas de ação e FII e na tela Conferir. O job não baixa nada da B3 |
+| **Status Invest** | Marca do Grupo Suno, com parte do conteúdo paga, segundo a [política de privacidade](https://statusinvest.com.br/politica-de-privacidade). Os [termos de uso](https://statusinvest.com.br/condicoes-de-uso) não puderam ser lidos: o site responde 403 a acesso automático **[A verificar]** | Só links para a página do próprio ativo, que a pessoa abre no navegador. O site não copia números de lá |
+
+Para usar os dados de qualquer uma das duas no job, é preciso autorização por escrito. Caminho: pedir à B3 pelo contato do UP2DATA e ao Grupo Suno, explicando que o site é educativo, gratuito e não comercial. O mesmo ponto vale para os preços que vêm hoje do Yahoo, que são dados da B3.
+
 ## 5. Frases do site que precisam de cuidado
 
 | Frase | Onde | Situação | Proposta |

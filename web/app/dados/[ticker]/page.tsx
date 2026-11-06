@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { DataDate } from "@/components/DataFreshness";
+import { ExternalSources } from "@/components/ExternalSources";
 import { Metric } from "@/components/Metric";
 import { Term } from "@/components/Term";
 import { getAsset, getCdiHistory, getDividends, getFiiReports, getPrices } from "@/lib/data";
@@ -248,6 +249,8 @@ export default async function AssetDataPage({ params }: Props) {
           </table>
         </details>
       </section>
+
+      <ExternalSources ticker={asset.ticker} assetClass={asset.class} />
     </main>
   );
 }
