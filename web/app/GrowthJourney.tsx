@@ -26,6 +26,7 @@ const STAGES = [
     name: "Raízes",
     title: "Primeiro, as raízes",
     text: "Antes de crescer para cima, a planta cresce para baixo. Uma reserva para imprevistos evita vender na pior hora.",
+    link: { href: "/primeiros-passos#reserva", label: "Calcular minha reserva" },
   },
   {
     name: "Broto",
@@ -46,6 +47,7 @@ const STAGES = [
     name: "Árvore",
     title: "O tempo faz o resto",
     text: "Juros sobre juros precisam de anos. Não há prazo garantido: o que cresceu até aqui não promete o futuro.",
+    link: { href: "/primeiros-passos#aportes", label: "Simular meus aportes" },
   },
 ];
 
@@ -95,6 +97,14 @@ function Stage({
             </h1>
           )}
           <p className="max-w-[46ch] text-lg leading-snug sm:text-xl">{stage.text}</p>
+          {"link" in stage && stage.link && (
+            <a
+              href={stage.link.href}
+              className="inline-block font-semibold text-lime underline underline-offset-4 hover:text-mist"
+            >
+              {stage.link.label}
+            </a>
+          )}
           {index === LIMBS_STAGE && (
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">

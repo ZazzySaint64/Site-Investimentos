@@ -10,12 +10,12 @@ import {
 } from "@/lib/fixed-income";
 import { formatMoney, formatPercent, formatSignedPercent } from "@/lib/phrases";
 
-const number = (value: number, digits = 2) =>
+export const number = (value: number, digits = 2) =>
   value.toLocaleString("pt-BR", { maximumFractionDigits: digits });
-const FIELD = "w-full rounded-md border border-border bg-surface px-3 py-2 tabular-nums";
-const CARD = "space-y-5 rounded-lg border border-border bg-surface p-5 sm:p-6";
+export const FIELD = "w-full rounded-md border border-border bg-surface px-3 py-2 tabular-nums";
+export const CARD = "space-y-5 rounded-lg border border-border bg-surface p-5 sm:p-6";
 
-function Field({
+export function Field({
   label,
   hint,
   children,
@@ -37,7 +37,7 @@ function Field({
 }
 
 /** A number field that keeps what is typed and reports only valid values. */
-function parse(text: string): number | null {
+export function parse(text: string): number | null {
   const value = Number(text.replace(",", "."));
   return text.trim() && Number.isFinite(value) ? value : null;
 }

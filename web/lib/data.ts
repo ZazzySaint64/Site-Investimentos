@@ -174,3 +174,7 @@ export async function getFiiReports(
   ]);
   return { months, quarter: quarters[0] ?? null };
 }
+
+export function getIpcaHistory(): Promise<MacroPoint[]> {
+  return getAllPages(`/macro_series?select=series,date,value&series=eq.ipca&order=date`);
+}

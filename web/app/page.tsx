@@ -24,6 +24,11 @@ import { SpecimenPicker } from "./SpecimenPicker";
 
 const PLACES = [
   {
+    title: "Primeiros passos",
+    text: "Quanto guardar de reserva e quanto um aporte por mês pode virar.",
+    href: "/primeiros-passos",
+  },
+  {
     title: "Carteira de exemplo",
     text: "Pessoas fictícias e preços reais, sem precisar criar conta.",
     href: "/demo/ana",
