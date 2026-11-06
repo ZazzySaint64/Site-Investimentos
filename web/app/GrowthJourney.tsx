@@ -21,6 +21,7 @@ const STAGES = [
     name: "Semente",
     title: null,
     text: "A semente é o primeiro passo: entender o básico antes de colocar dinheiro. Role, arraste ou deslize para o lado e veja o resto do caminho.",
+    link: { href: "/comecar", label: "Ver o caminho em passos" },
   },
   {
     name: "Raízes",

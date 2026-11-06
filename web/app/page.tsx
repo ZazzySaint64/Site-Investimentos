@@ -24,6 +24,11 @@ import { SpecimenPicker } from "./SpecimenPicker";
 
 const PLACES = [
   {
+    title: "Por onde começar",
+    text: "As seis etapas da planta, em ordem, cada uma com a ferramenta que ajuda nela.",
+    href: "/comecar",
+  },
+  {
     title: "Primeiros passos",
     text: "Quanto guardar de reserva e quanto um aporte por mês pode virar.",
     href: "/primeiros-passos",

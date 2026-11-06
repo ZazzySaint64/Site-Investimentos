@@ -62,6 +62,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </Link>
                 </li>
                 <li>
+                  <Link href="/comecar" className={FOOT_LINK}>
+                    Por onde começar
+                  </Link>
+                </li>
+                <li>
                   <Link href="/primeiros-passos" className={FOOT_LINK}>
                     Primeiros passos
                   </Link>
