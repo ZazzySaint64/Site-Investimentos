@@ -101,6 +101,26 @@ test("the phone layout does not overflow while pinned", async ({ page }) => {
   expect(overflow).toBe(false);
 });
 
+test("on a short phone the text of each stage ends above the stage buttons", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Etapas do crescimento" });
+  for (const [stage, heading] of [
+    ["Semente", /Investir em/],
+    ["Galhos", "Cada galho, um risco"],
+    ["Seca", "Toda árvore passa por secas"],
+  ] as const) {
+    await page.getByRole("button", { name: stage, exact: true }).click();
+    const title = page.getByRole("heading", { name: heading });
+    await expect(title).toBeInViewport();
+    await page.waitForTimeout(1200); // the smooth scroll of the click must end first
+    const text = title.locator("xpath=..");
+    const textBottom = await text.evaluate((element) => element.getBoundingClientRect().bottom);
+    const navTop = await nav.evaluate((element) => element.getBoundingClientRect().top);
+    expect(textBottom, stage).toBeLessThanOrEqual(navTop);
+  }
+});
+
 test("the leaves stay on the tree on a scaled screen", async ({ browser, baseURL }) => {
   const context = await browser.newContext({ baseURL, deviceScaleFactor: 2, viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();

@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { PlantCanvas } from "./PlantCanvas";
 
-const HEADING = "text-[clamp(2.25rem,1.3rem+3.2vw,4rem)] leading-[1.02]";
+const HEADING = "text-[clamp(2.25rem,1.3rem+3.2vw,4rem)] leading-[1.02] short:text-[2rem]";
 const SCROLL_PER_STAGE_SVH = 85;
 const noop = () => () => {};
 
@@ -84,20 +84,20 @@ function Stage({
     <article className="h-full w-full shrink-0 snap-start snap-always">
       <motion.div
         style={fades ? { opacity } : undefined}
-        className="mx-auto flex h-full max-w-6xl flex-col px-4 pt-[calc(38svh+3.5rem)] pb-28 sm:px-8 lg:justify-center lg:pt-0 lg:pb-24"
+        className="mx-auto flex h-full max-w-6xl flex-col justify-end px-4 pb-28 sm:px-8 lg:justify-center lg:pb-24"
       >
-        <div className="space-y-4 lg:w-[52%]">
+        <div className="space-y-4 short:space-y-2 lg:w-[52%]">
           <p className="font-semibold text-lime">{stage.name}</p>
           {stage.title ? (
             <h2 className={HEADING}>{stage.title}</h2>
           ) : (
-            <h1 className="text-[11.4vw] leading-[0.95] sm:text-[6.5vw] lg:text-[5.4vw] 2xl:text-[5.5rem]">
+            <h1 className="text-[11.4vw] leading-[0.95] short:text-[min(11.4vw,6.4svh)] sm:text-[6.5vw] lg:text-[5.4vw] 2xl:text-[5.5rem]">
               Investir em
               <br />
               palavras simples
             </h1>
           )}
-          <p className="max-w-[46ch] text-lg leading-snug sm:text-xl">{stage.text}</p>
+          <p className="max-w-[46ch] text-lg leading-snug short:text-base sm:text-xl">{stage.text}</p>
           {"link" in stage && stage.link && (
             <a
               href={stage.link.href}
@@ -241,7 +241,7 @@ export function GrowthJourney() {
         onKeyDown={onKeyDown}
         role="group"
         aria-label="Etapas. Use as setas para os lados para passar"
-        className={`relative h-[calc(100svh-var(--header-height))] min-h-[600px] overflow-hidden lg:min-h-[520px] ${
+        className={`relative h-[calc(100svh-var(--header-height))] min-h-[480px] overflow-hidden lg:min-h-[520px] ${
           pinned ? "sticky top-[var(--header-height)] cursor-grab touch-pan-y select-none active:cursor-grabbing" : ""
         }`}
       >
